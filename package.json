@@ -6,7 +6,7 @@
   "license": "MIT",
   "url": "https://github.com/nestjs/config#readme",
   "scripts": {
-    "build": "rm -rf dist && tsc -p tsconfig.json",
+    "build": "rimraf -rf dist && tsc -p tsconfig.json",
     "prepublish:npm": "npm run build",
     "publish:npm": "npm publish --access public",
     "prepublish:next": "npm run build",
@@ -33,12 +33,13 @@
     "lodash.get": "^4.4.2",
     "prettier": "1.19.1",
     "reflect-metadata": "0.1.13",
+    "rimraf": "^3.0.0",
     "rxjs": "6.5.3",
     "ts-jest": "24.2.0",
     "typescript": "3.7.3"
   },
   "peerDependencies": {
-    "@nestjs/common": "^6.7.0",
+    "@nestjs/common": "^6.10.0",
     "reflect-metadata": "^0.1.12",
     "rxjs": "^6.0.0"
   },
