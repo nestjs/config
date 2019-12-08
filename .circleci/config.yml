@@ -47,12 +47,13 @@ jobs:
       - run:
           name: Integration tests
           command: npm run test:integration
+
 workflows:
   version: 2
   build-and-test:
     jobs:
       - build
       - integration_tests:
-        requires:
-          - build
+          requires:
+            - build
       
