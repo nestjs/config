@@ -11,3 +11,6 @@ tsconfig.json
 .github
 CONTRIBUTING.md
 renovate.json
+
+# ci
+.circleci
