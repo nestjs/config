@@ -19,6 +19,11 @@ describe('Environment variables', () => {
     expect(envVars.PORT).toEqual('4000');
   });
 
+  it(`should inject env variable with @InjectConfig`, () => {
+    const port = app.get(AppModule).getServerPort();
+    expect(port).toEqual('4000');
+  });
+
   afterEach(async () => {
     await app.close();
   });

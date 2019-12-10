@@ -13,6 +13,9 @@ export class AppModule {
     @Optional()
     @InjectConfig('database')
     private readonly databaseConfig: Record<string, any>,
+    @Optional()
+    @InjectConfig('PORT')
+    private readonly serverPort: string,
   ) {}
 
   static withEnvVars(): DynamicModule {
@@ -71,5 +74,9 @@ export class AppModule {
 
   getDatabaseConfig() {
     return this.databaseConfig;
+  }
+
+  getServerPort() {
+    return this.serverPort;
   }
 }
