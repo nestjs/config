@@ -28,9 +28,10 @@ export class ConfigModule {
    * @param options
    */
   static forRoot(options: ConfigModuleOptions = {}): DynamicModule {
+    const envProviders: any[] = [];
     if (!options.ignoreEnvFile) {
+      const config = this.loadEnvFile(options);
       if (options.validationSchema) {
-        const config = this.loadEnvFile(options);
         const {
           error,
           value: validatedConfig,
@@ -43,11 +44,16 @@ export class ConfigModule {
           Object.assign(process.env, validatedConfig);
         }
       } else {
-        const config = this.loadEnvFile(options);
         if (options.envFilePath) {
           Object.assign(process.env, config);
         }
       }
+      Object.keys(config).forEach(token => {
+        envProviders.push({
+          provide: getConfigToken(token),
+          useValue: config[token],
+        } as ValueProvider);
+      });
     }
     const hasConfigsToLoad = options.load && options.load.length;
     const providers = (options.load || [])
@@ -68,6 +74,7 @@ export class ConfigModule {
       global: options.isGlobal,
       providers: hasConfigsToLoad
         ? [
+            ...envProviders,
             ...providers,
             {
               provide: CONFIGURATION_LOADER,
@@ -79,8 +86,8 @@ export class ConfigModule {
               inject: [CONFIGURATION_TOKEN],
             },
           ]
-        : providers,
-      exports: [...providers],
+        : [...envProviders, ...providers],
+      exports: [...envProviders, ...providers],
     };
   }
 
