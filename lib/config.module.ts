@@ -2,6 +2,7 @@ import { DynamicModule, Module } from '@nestjs/common';
 import { ValueProvider } from '@nestjs/common/interfaces';
 import * as dotenv from 'dotenv';
 import * as fs from 'fs';
+import { isObject } from 'util';
 import { ConfigHostModule } from './config-host.module';
 import { CONFIGURATION_LOADER, CONFIGURATION_TOKEN } from './config.constants';
 import { getConfigToken } from './utils';
@@ -40,12 +41,12 @@ export class ConfigModule {
           throw new Error(`Config validation error: ${error.message}`);
         }
         if (options.envFilePath) {
-          Object.assign(process.env, validatedConfig);
+          this.assignVariablesToProcess(validatedConfig);
         }
       } else {
         const config = this.loadEnvFile(options);
         if (options.envFilePath) {
-          Object.assign(process.env, config);
+          this.assignVariablesToProcess(config);
         }
       }
     }
@@ -122,5 +123,13 @@ export class ConfigModule {
       ? dotenv.parse(fs.readFileSync(options.envFilePath))
       : dotenv.config({ encoding: options.encoding }).parsed;
     return config || {};
+  }
+
+  private static assignVariablesToProcess(config: Record<string, any>) {
+    if (!isObject(config)) {
+      return;
+    }
+    const keys = Object.keys(config).filter(key => !(key in process.env));
+    keys.forEach(key => (process.env[key] = config[key]));
   }
 }
