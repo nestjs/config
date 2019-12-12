@@ -1,19 +1,13 @@
 import * as Joi from '@hapi/joi';
-import { DynamicModule, Module, Optional } from '@nestjs/common';
+import { DynamicModule, Module } from '@nestjs/common';
 import { join } from 'path';
-import { InjectConfig } from '../../lib';
 import { ConfigModule } from '../../lib/config.module';
 import { ConfigService } from '../../lib/config.service';
 import databaseConfig from './database.config';
 
 @Module({})
 export class AppModule {
-  constructor(
-    private readonly configService: ConfigService,
-    @Optional()
-    @InjectConfig('database')
-    private readonly databaseConfig: Record<string, any>,
-  ) {}
+  constructor(private readonly configService: ConfigService) {}
 
   static withEnvVars(): DynamicModule {
     return {
@@ -67,9 +61,5 @@ export class AppModule {
 
   getDatabaseHost() {
     return this.configService.get('database.host');
-  }
-
-  getDatabaseConfig() {
-    return this.databaseConfig;
   }
 }

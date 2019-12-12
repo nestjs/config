@@ -19,11 +19,6 @@ describe('forFeature()', () => {
     expect(host).toEqual('host');
   });
 
-  it(`should inject the configuration via @InjectConfig()`, () => {
-    const host = app.get(AppModule).getDatabaseConfig().host;
-    expect(host).toEqual('host');
-  });
-
   afterEach(async () => {
     await app.close();
   });
