@@ -1,12 +1,10 @@
-import { getRegistrationToken } from './get-registration-token.util';
-
-export function mergeConfigObjects(
-  configHost: Record<string, any>,
-  obj: Record<string, any>,
+export function mergeConfigObject(
+  host: Record<string, any>,
+  partial: Record<string, any>,
+  token?: string,
 ) {
-  const token = getRegistrationToken(obj);
   if (token) {
-    return (configHost[token] = obj);
+    return (host[token] = partial);
   }
-  Object.assign(configHost, obj);
+  Object.assign(host, partial);
 }

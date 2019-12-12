@@ -1,5 +1,5 @@
-import { CONFIGURATION_NAMESPACE } from '../config.constants';
+import { PARTIAL_CONFIGURATION_KEY } from '../config.constants';
 
 export function getRegistrationToken(config: Record<string, any>) {
-  return config[CONFIGURATION_NAMESPACE];
+  return config[PARTIAL_CONFIGURATION_KEY];
 }

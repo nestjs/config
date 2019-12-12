@@ -1,5 +1,5 @@
 import { DynamicModule, Module } from '@nestjs/common';
-import { ValueProvider } from '@nestjs/common/interfaces';
+import { FactoryProvider } from '@nestjs/common/interfaces';
 import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import { isObject } from 'util';
@@ -10,18 +10,10 @@ import {
   CONFIGURATION_TOKEN,
 } from './config.constants';
 import { ConfigService } from './config.service';
-import { getConfigToken } from './utils';
+import { ConfigFactory, ConfigModuleOptions } from './interfaces';
+import { createConfigProvider } from './utils/create-config-factory.util';
 import { getRegistrationToken } from './utils/get-registration-token.util';
-import { mergeConfigObjects } from './utils/merge-configs.util';
-
-export interface ConfigModuleOptions {
-  isGlobal?: boolean;
-  ignoreEnvFile?: boolean;
-  envFilePath?: string;
-  encoding?: string;
-  validationSchema?: any;
-  load?: Array<Record<string, any>>;
-}
+import { mergeConfigObject } from './utils/merge-configs.util';
 
 @Module({
   imports: [ConfigHostModule],
@@ -58,38 +50,32 @@ export class ConfigModule {
         }
       }
     }
-    const hasConfigsToLoad = options.load && options.load.length;
+    const isConfigToLoad = options.load && options.load.length;
     const providers = (options.load || [])
-      .map(item => {
-        const token = getRegistrationToken(item);
-        if (!token) {
-          return undefined;
-        }
-        return {
-          provide: getConfigToken(token),
-          useValue: item,
-        } as ValueProvider;
-      })
-      .filter(item => item) as ValueProvider[];
+      .map(factory => createConfigProvider(factory))
+      .filter(item => item) as FactoryProvider[];
 
+    const configProviderTokens = providers.map(item => item.provide);
     return {
       module: ConfigModule,
       global: options.isGlobal,
-      providers: hasConfigsToLoad
+      providers: isConfigToLoad
         ? [
             ...providers,
             {
               provide: CONFIGURATION_LOADER,
-              useFactory: (configHost: Record<string, any>) => {
-                options.load!.forEach(item =>
-                  mergeConfigObjects(configHost, item),
+              useFactory: (
+                host: Record<string, any>,
+                ...configurations: Record<string, any>[]
+              ) => {
+                configurations.forEach((item, index) =>
+                  this.mergePartial(host, item, providers[index]),
                 );
               },
-              inject: [CONFIGURATION_TOKEN],
+              inject: [CONFIGURATION_TOKEN, ...configProviderTokens],
             },
           ]
         : providers,
-      exports: [...providers],
     };
   }
 
@@ -97,30 +83,23 @@ export class ConfigModule {
    * Registers configuration object (partial registration).
    * @param config
    */
-  static forFeature(config: Record<string, any>) {
-    const token = getRegistrationToken(config);
-    const providers = token
-      ? [
-          {
-            provide: getConfigToken(token),
-            useValue: config,
-          },
-        ]
-      : [];
-
+  static forFeature(config: ConfigFactory) {
+    const configProvider = createConfigProvider(config);
     return {
       module: ConfigModule,
       providers: [
-        ...providers,
+        configProvider,
         {
           provide: CONFIGURATION_LOADER,
-          useFactory: (configHost: Record<string, any>) => {
-            mergeConfigObjects(configHost, config);
+          useFactory: (
+            host: Record<string, any>,
+            partialConfig: Record<string, any>,
+          ) => {
+            this.mergePartial(host, partialConfig, configProvider);
           },
-          inject: [CONFIGURATION_TOKEN],
+          inject: [CONFIGURATION_TOKEN, configProvider.provide],
         },
       ],
-      exports: [...providers],
     };
   }
 
@@ -139,5 +118,15 @@ export class ConfigModule {
     }
     const keys = Object.keys(config).filter(key => !(key in process.env));
     keys.forEach(key => (process.env[key] = config[key]));
+  }
+
+  private static mergePartial(
+    host: Record<string, any>,
+    item: Record<string, any>,
+    provider: FactoryProvider,
+  ) {
+    const factoryRef = provider.useFactory;
+    const token = getRegistrationToken(factoryRef);
+    mergeConfigObject(host, item, token);
   }
 }
