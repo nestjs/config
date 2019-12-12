@@ -4,7 +4,12 @@ import * as dotenv from 'dotenv';
 import * as fs from 'fs';
 import { isObject } from 'util';
 import { ConfigHostModule } from './config-host.module';
-import { CONFIGURATION_LOADER, CONFIGURATION_TOKEN } from './config.constants';
+import {
+  CONFIGURATION_LOADER,
+  CONFIGURATION_SERVICE_TOKEN,
+  CONFIGURATION_TOKEN,
+} from './config.constants';
+import { ConfigService } from './config.service';
 import { getConfigToken } from './utils';
 import { getRegistrationToken } from './utils/get-registration-token.util';
 import { mergeConfigObjects } from './utils/merge-configs.util';
@@ -20,7 +25,10 @@ export interface ConfigModuleOptions {
 
 @Module({
   imports: [ConfigHostModule],
-  exports: [ConfigHostModule],
+  providers: [
+    { provide: ConfigService, useExisting: CONFIGURATION_SERVICE_TOKEN },
+  ],
+  exports: [ConfigHostModule, ConfigService],
 })
 export class ConfigModule {
   /**
