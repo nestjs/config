@@ -28,6 +28,12 @@ export interface ConfigModuleOptions {
   validationSchema?: any;
 
   /**
+   * Schema validation options.
+   * See: https://hapi.dev/family/joi/?v=16.1.8#anyvalidatevalue-options
+   */
+  validationOptions?: Record<string, any>;
+
+  /**
    * Array of custom configuration files to be loaded.
    * See: https://docs.nestjs.com/techniques/configuration
    */

@@ -2,6 +2,7 @@ import { DynamicModule, Module } from '@nestjs/common';
 import { FactoryProvider } from '@nestjs/common/interfaces';
 import * as dotenv from 'dotenv';
 import * as fs from 'fs';
+import { resolve } from 'path';
 import { isObject } from 'util';
 import { ConfigHostModule } from './config-host.module';
 import {
@@ -32,22 +33,19 @@ export class ConfigModule {
     if (!options.ignoreEnvFile) {
       if (options.validationSchema) {
         const config = this.loadEnvFile(options);
+        const validationOptions = this.getSchemaValidationOptions(options);
         const {
           error,
           value: validatedConfig,
-        } = options.validationSchema.validate(config);
+        } = options.validationSchema.validate(config, validationOptions);
 
         if (error) {
           throw new Error(`Config validation error: ${error.message}`);
         }
-        if (options.envFilePath) {
-          this.assignVariablesToProcess(validatedConfig);
-        }
+        this.assignVariablesToProcess(validatedConfig);
       } else {
         const config = this.loadEnvFile(options);
-        if (options.envFilePath) {
-          this.assignVariablesToProcess(config);
-        }
+        this.assignVariablesToProcess(config);
       }
     }
     const isConfigToLoad = options.load && options.load.length;
@@ -106,9 +104,8 @@ export class ConfigModule {
   private static loadEnvFile(
     options: ConfigModuleOptions,
   ): Record<string, any> {
-    const config = options.envFilePath
-      ? dotenv.parse(fs.readFileSync(options.envFilePath))
-      : dotenv.config({ encoding: options.encoding }).parsed;
+    const envFilePath = options.envFilePath || resolve(process.cwd(), '.env');
+    const config = dotenv.parse(fs.readFileSync(envFilePath));
     return config || {};
   }
 
@@ -128,5 +125,14 @@ export class ConfigModule {
     const factoryRef = provider.useFactory;
     const token = getRegistrationToken(factoryRef);
     mergeConfigObject(host, item, token);
+  }
+
+  private static getSchemaValidationOptions(options: ConfigModuleOptions) {
+    return (
+      options.validationOptions || {
+        abortEarly: false,
+        allowUnknown: true,
+      }
+    );
   }
 }
