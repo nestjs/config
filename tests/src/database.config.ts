@@ -1,7 +1,6 @@
-import { ConfigService } from '../../lib';
 import { registerAs } from '../../lib/utils';
 
-export default registerAs('database', (configService: ConfigService) => ({
+export default registerAs('database', () => ({
   host: 'host',
   port: 4000,
 }));
