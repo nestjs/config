@@ -15,7 +15,7 @@ describe('Schema validation', () => {
       await app.init();
     } catch (err) {
       expect(err.message).toEqual(
-        'Config validation error: "PORT" is required',
+        'Config validation error: "PORT" is required. "DATABASE_NAME" is required',
       );
     }
   });

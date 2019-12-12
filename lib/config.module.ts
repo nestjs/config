@@ -104,9 +104,16 @@ export class ConfigModule {
   private static loadEnvFile(
     options: ConfigModuleOptions,
   ): Record<string, any> {
-    const envFilePath = options.envFilePath || resolve(process.cwd(), '.env');
-    const config = dotenv.parse(fs.readFileSync(envFilePath));
-    return config || {};
+    try {
+      const envFilePath = options.envFilePath || resolve(process.cwd(), '.env');
+      const config = dotenv.parse(fs.readFileSync(envFilePath));
+      return config;
+    } catch (err) {
+      if (options.envFilePath || (err && err.code !== 'ENOENT')) {
+        throw err;
+      }
+      return {};
+    }
   }
 
   private static assignVariablesToProcess(config: Record<string, any>) {
