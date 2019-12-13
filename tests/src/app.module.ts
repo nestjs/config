@@ -4,6 +4,7 @@ import { join } from 'path';
 import { ConfigModule } from '../../lib/config.module';
 import { ConfigService } from '../../lib/config.service';
 import databaseConfig from './database.config';
+import { DATABASE_PORT } from './database.contants';
 
 @Module({})
 export class AppModule {
@@ -61,5 +62,9 @@ export class AppModule {
 
   getDatabaseHost() {
     return this.configService.get('database.host');
+  }
+
+  getDatabasePort() {
+    return this.configService.getByKey(DATABASE_PORT);
   }
 }

@@ -19,6 +19,11 @@ describe('Environment variables', () => {
     expect(envVars.PORT).toEqual('4000');
   });
 
+  it(`should return loaded configuration by config key`, () => {
+    const port = app.get(AppModule).getDatabasePort();
+    expect(port).toEqual(4000);
+  });
+
   afterEach(async () => {
     await app.close();
   });
