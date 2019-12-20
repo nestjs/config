@@ -6,17 +6,17 @@ describe('Schema validation', () => {
   let app: INestApplication;
 
   it(`should validate loaded env variables`, async () => {
-    try {
-      const module = await Test.createTestingModule({
-        imports: [AppModule.withSchemaValidation()],
-      }).compile();
+    return expect(
+      (async () => {
+        const module = await Test.createTestingModule({
+          imports: [AppModule.withSchemaValidation()],
+        }).compile();
 
-      app = module.createNestApplication();
-      await app.init();
-    } catch (err) {
-      expect(err.message).toEqual(
-        'Config validation error: "PORT" is required. "DATABASE_NAME" is required',
-      );
-    }
+        app = module.createNestApplication();
+        await app.init();
+      })(),
+    ).rejects.toThrow(
+      'Config validation error: "PORT" is required. "DATABASE_NAME" is required',
+    );
   });
 });
