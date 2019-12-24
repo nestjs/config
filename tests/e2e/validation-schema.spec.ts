@@ -8,6 +8,7 @@ describe('Schema validation', () => {
   it(`should validate loaded env variables`, async () => {
     return expect(
       (async () => {
+        process.env.PORT = 'invalid value';
         const module = await Test.createTestingModule({
           imports: [AppModule.withSchemaValidation()],
         }).compile();
@@ -16,7 +17,7 @@ describe('Schema validation', () => {
         await app.init();
       })(),
     ).rejects.toThrow(
-      'Config validation error: "PORT" is required. "DATABASE_NAME" is required',
+      'Config validation error: "PORT" must be a number. "DATABASE_NAME" is required',
     );
   });
 });

@@ -30,24 +30,25 @@ export class ConfigModule {
    * @param options
    */
   static forRoot(options: ConfigModuleOptions = {}): DynamicModule {
+    let config = { ...process.env };
     if (!options.ignoreEnvFile) {
-      if (options.validationSchema) {
-        const config = this.loadEnvFile(options);
-        const validationOptions = this.getSchemaValidationOptions(options);
-        const {
-          error,
-          value: validatedConfig,
-        } = options.validationSchema.validate(config, validationOptions);
-
-        if (error) {
-          throw new Error(`Config validation error: ${error.message}`);
-        }
-        this.assignVariablesToProcess(validatedConfig);
-      } else {
-        const config = this.loadEnvFile(options);
-        this.assignVariablesToProcess(config);
-      }
+      config = { ...this.loadEnvFile(options), ...config };
     }
+    if (options.validationSchema) {
+      const validationOptions = this.getSchemaValidationOptions(options);
+      const {
+        error,
+        value: validatedConfig,
+      } = options.validationSchema.validate(config, validationOptions);
+
+      if (error) {
+        throw new Error(`Config validation error: ${error.message}`);
+      }
+      config = validatedConfig;
+    }
+
+    this.assignVariablesToProcess(config);
+
     const isConfigToLoad = options.load && options.load.length;
     const providers = (options.load || [])
       .map(factory => createConfigProvider(factory))
