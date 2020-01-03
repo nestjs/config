@@ -18,10 +18,7 @@ import { mergeConfigObject } from './utils/merge-configs.util';
 
 @Module({
   imports: [ConfigHostModule],
-  providers: [
-    { provide: ConfigService, useExisting: CONFIGURATION_SERVICE_TOKEN },
-  ],
-  exports: [ConfigHostModule, ConfigService],
+  exports: [ConfigHostModule],
 })
 export class ConfigModule {
   /**
@@ -54,6 +51,13 @@ export class ConfigModule {
       .filter(item => item) as FactoryProvider[];
 
     const configProviderTokens = providers.map(item => item.provide);
+    const configServiceProvider = {
+      provide: ConfigService,
+      useFactory: (configService: ConfigService) => configService,
+      inject: [CONFIGURATION_SERVICE_TOKEN, ...configProviderTokens],
+    };
+    providers.push(configServiceProvider);
+
     return {
       module: ConfigModule,
       global: options.isGlobal,
@@ -74,6 +78,7 @@ export class ConfigModule {
             },
           ]
         : providers,
+      exports: [ConfigService],
     };
   }
 
@@ -83,10 +88,17 @@ export class ConfigModule {
    */
   static forFeature(config: ConfigFactory) {
     const configProvider = createConfigProvider(config);
+    const serviceProvider = {
+      provide: ConfigService,
+      useFactory: (configService: ConfigService) => configService,
+      inject: [CONFIGURATION_SERVICE_TOKEN, configProvider.provide],
+    };
+
     return {
       module: ConfigModule,
       providers: [
         configProvider,
+        serviceProvider,
         {
           provide: CONFIGURATION_LOADER,
           useFactory: (
@@ -98,6 +110,7 @@ export class ConfigModule {
           inject: [CONFIGURATION_TOKEN, configProvider.provide],
         },
       ],
+      exports: [ConfigService],
     };
   }
 
