@@ -19,7 +19,21 @@ export class ConfigService {
    * @param defaultValue
    */
   get<T = any>(propertyPath: string): T | undefined;
+  /**
+   * Get a configuration value (either custom configuration or process environment variable)
+   * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
+   * It returns a default value if the key does not exist.
+   * @param propertyPath
+   * @param defaultValue
+   */
   get<T = any>(propertyPath: string, defaultValue: T): T;
+  /**
+   * Get a configuration value (either custom configuration or process environment variable)
+   * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
+   * It returns a default value if the key does not exist.
+   * @param propertyPath
+   * @param defaultValue
+   */
   get<T = any>(propertyPath: string, defaultValue?: T): T | undefined {
     const processValue = get(process.env, propertyPath);
     if (!isUndefined(processValue)) {
