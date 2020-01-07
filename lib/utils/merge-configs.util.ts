@@ -7,7 +7,6 @@ export function mergeConfigObject(
 ) {
   if (token) {
     set(host, token, partial);
-
     return partial;
   }
   Object.assign(host, partial);
