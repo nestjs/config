@@ -20,11 +20,11 @@
     "uuid": "3.3.3"
   },
   "devDependencies": {
-    "@hapi/joi": "16.1.8",
-    "@nestjs/common": "6.10.13",
-    "@nestjs/core": "6.10.13",
-    "@nestjs/platform-express": "6.10.13",
-    "@nestjs/testing": "6.10.13",
+    "@hapi/joi": "17.0.0",
+    "@nestjs/common": "6.10.14",
+    "@nestjs/core": "6.10.14",
+    "@nestjs/platform-express": "6.10.14",
+    "@nestjs/testing": "6.10.14",
     "@types/dotenv": "8.2.0",
     "@types/hapi__joi": "16.0.6",
     "@types/jest": "24.0.25",
@@ -32,14 +32,14 @@
     "@types/lodash.set": "^4.3.6",
     "@types/node": "7.10.8",
     "@types/uuid": "3.4.6",
-    "husky": "3.1.0",
+    "husky": "4.0.0",
     "jest": "24.9.0",
     "lint-staged": "9.5.0",
     "prettier": "1.19.1",
     "reflect-metadata": "0.1.13",
     "rimraf": "3.0.0",
     "rxjs": "6.5.4",
-    "ts-jest": "24.2.0",
+    "ts-jest": "24.3.0",
     "typescript": "3.7.4"
   },
   "peerDependencies": {
