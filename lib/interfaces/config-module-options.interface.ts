@@ -13,7 +13,7 @@ export interface ConfigModuleOptions {
   ignoreEnvFile?: boolean;
 
   /**
-   * If "true", predefined environment variables will be ignored.
+   * If "true", predefined environment variables will not be validated.
    */
   ignoreEnvVars?: boolean;
 

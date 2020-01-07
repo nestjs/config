@@ -27,14 +27,15 @@ export class ConfigModule {
    * @param options
    */
   static forRoot(options: ConfigModuleOptions = {}): DynamicModule {
-    let config = { ...process.env };
     if (!options.ignoreEnvFile) {
-      config = {
-        ...config,
-        ...this.loadEnvFile(options),
-      };
-
       if (options.validationSchema) {
+        let config = this.loadEnvFile(options);
+        if (!options.ignoreEnvVars) {
+          config = {
+            ...process.env,
+            ...config,
+          };
+        }
         const validationOptions = this.getSchemaValidationOptions(options);
         const {
           error,
@@ -46,6 +47,7 @@ export class ConfigModule {
         }
         this.assignVariablesToProcess(validatedConfig);
       } else {
+        const config = this.loadEnvFile(options);
         this.assignVariablesToProcess(config);
       }
     }
