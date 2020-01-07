@@ -8,12 +8,17 @@ export interface ConfigModuleOptions {
   isGlobal?: boolean;
 
   /**
-   * If "true", envirionment files (`.env`) will be ignored.
+   * If "true", environment files (`.env`) will be ignored.
    */
   ignoreEnvFile?: boolean;
 
   /**
-   * Path to the envirionment file to be loaded.
+   * If "true", predefined environment variables will be ignored.
+   */
+  ignoreEnvVars?: boolean;
+
+  /**
+   * Path to the environment file to be loaded.
    */
   envFilePath?: string;
 

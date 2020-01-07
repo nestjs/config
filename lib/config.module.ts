@@ -27,9 +27,14 @@ export class ConfigModule {
    * @param options
    */
   static forRoot(options: ConfigModuleOptions = {}): DynamicModule {
+    let config = { ...process.env };
     if (!options.ignoreEnvFile) {
+      config = {
+        ...config,
+        ...this.loadEnvFile(options),
+      };
+
       if (options.validationSchema) {
-        const config = this.loadEnvFile(options);
         const validationOptions = this.getSchemaValidationOptions(options);
         const {
           error,
@@ -41,7 +46,6 @@ export class ConfigModule {
         }
         this.assignVariablesToProcess(validatedConfig);
       } else {
-        const config = this.loadEnvFile(options);
         this.assignVariablesToProcess(config);
       }
     }
@@ -148,11 +152,15 @@ export class ConfigModule {
   }
 
   private static getSchemaValidationOptions(options: ConfigModuleOptions) {
-    return (
-      options.validationOptions || {
-        abortEarly: false,
-        allowUnknown: true,
+    if (options.validationOptions) {
+      if (typeof options.validationOptions.allowUnknown === 'undefined') {
+        options.validationOptions.allowUnknown = true;
       }
-    );
+      return options.validationOptions;
+    }
+    return {
+      abortEarly: false,
+      allowUnknown: true,
+    };
   }
 }
