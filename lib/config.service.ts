@@ -18,6 +18,8 @@ export class ConfigService {
    * @param propertyPath
    * @param defaultValue
    */
+  get<T = any>(propertyPath: string): T | undefined;
+  get<T = any>(propertyPath: string, defaultValue: T): T;
   get<T = any>(propertyPath: string, defaultValue?: T): T | undefined {
     const processValue = get(process.env, propertyPath);
     if (!isUndefined(processValue)) {
