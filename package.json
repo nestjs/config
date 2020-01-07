@@ -16,6 +16,7 @@
   "dependencies": {
     "dotenv": "8.2.0",
     "lodash.get": "4.4.2",
+    "lodash.set": "^4.3.2",
     "uuid": "3.3.3"
   },
   "devDependencies": {
@@ -28,6 +29,7 @@
     "@types/hapi__joi": "16.0.6",
     "@types/jest": "24.0.25",
     "@types/lodash.get": "4.4.6",
+    "@types/lodash.set": "^4.3.6",
     "@types/node": "7.10.8",
     "@types/uuid": "3.4.6",
     "husky": "3.1.0",

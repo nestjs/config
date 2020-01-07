@@ -4,6 +4,7 @@ import { join } from 'path';
 import { ConfigModule } from '../../lib/config.module';
 import { ConfigService } from '../../lib/config.service';
 import databaseConfig from './database.config';
+import nestedDatabaseConfig from './nested-database.config';
 
 @Module({})
 export class AppModule {
@@ -26,6 +27,17 @@ export class AppModule {
       imports: [
         ConfigModule.forRoot({
           load: [databaseConfig],
+        }),
+      ],
+    };
+  }
+
+  static withNestedLoadedConfigurations(): DynamicModule {
+    return {
+      module: AppModule,
+      imports: [
+        ConfigModule.forRoot({
+          load: [nestedDatabaseConfig],
         }),
       ],
     };
@@ -61,5 +73,9 @@ export class AppModule {
 
   getDatabaseHost() {
     return this.configService.get('database.host');
+  }
+
+  getNestedDatabaseHost() {
+    return this.configService.get('database.driver.host');
   }
 }
