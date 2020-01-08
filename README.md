@@ -26,7 +26,7 @@
 
 ## Description
 
-Configuration module for [Nest](https://github.com/nestjs/nest) based on [dotenv](https://github.com/motdotla/dotenv) (to load process environment variables).
+Configuration module for [Nest](https://github.com/nestjs/nest) based on the [dotenv](https://github.com/motdotla/dotenv) (to load process environment variables) package.
 
 ## Installation
 
@@ -44,7 +44,7 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 
 ## Stay in touch
 
-- Author - [Kamil Myśliwiec](https://kamilmysliwiec.com)
+- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
 - Website - [https://nestjs.com](https://nestjs.com/)
 - Twitter - [@nestframework](https://twitter.com/nestframework)
 
