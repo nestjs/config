@@ -126,11 +126,13 @@ export class ConfigModule {
   ): Record<string, any> {
     try {
       const envFilePath = options.envFilePath || resolve(process.cwd(), '.env');
-      if (options.expandVariables) {
-        const config = dotenv.config({ path: envFilePath });
-        return dotenvExpand(config).parsed || {};
-      }
       const config = dotenv.parse(fs.readFileSync(envFilePath));
+      if (options.expandVariables) {
+        const configExpandedVars = {
+          parsed: config,
+        };
+        return dotenvExpand(configExpandedVars).parsed || {};
+      }
       return config;
     } catch (err) {
       if (options.envFilePath || (err && err.code !== 'ENOENT')) {
