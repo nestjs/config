@@ -1,6 +1,7 @@
 import { DynamicModule, Module } from '@nestjs/common';
 import { FactoryProvider } from '@nestjs/common/interfaces';
 import * as dotenv from 'dotenv';
+import dotenvExpand from 'dotenv-expand';
 import * as fs from 'fs';
 import { resolve } from 'path';
 import { isObject } from 'util';
@@ -125,6 +126,10 @@ export class ConfigModule {
   ): Record<string, any> {
     try {
       const envFilePath = options.envFilePath || resolve(process.cwd(), '.env');
+      if (options.expandVariables) {
+        const config = dotenv.config({ path: envFilePath });
+        return dotenvExpand(config).parsed || {};
+      }
       const config = dotenv.parse(fs.readFileSync(envFilePath));
       return config;
     } catch (err) {

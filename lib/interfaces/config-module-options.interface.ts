@@ -43,4 +43,11 @@ export interface ConfigModuleOptions {
    * See: https://docs.nestjs.com/techniques/configuration
    */
   load?: Array<ConfigFactory>;
+
+  /**
+   * A boolean value indicating the use of expanded variables.
+   * If .env contains expanded variables, they'll only be parsed if
+   * this property is set to true.
+   */
+  expandVariables?: boolean;
 }
