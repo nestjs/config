@@ -25,7 +25,6 @@
     "@nestjs/core": "6.10.14",
     "@nestjs/platform-express": "6.10.14",
     "@nestjs/testing": "6.10.14",
-    "@types/dotenv": "8.2.0",
     "@types/hapi__joi": "16.0.6",
     "@types/jest": "24.9.0",
     "@types/lodash.get": "4.4.6",
