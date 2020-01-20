@@ -20,7 +20,7 @@
     "uuid": "3.3.3"
   },
   "devDependencies": {
-    "@hapi/joi": "17.0.2",
+    "@hapi/joi": "17.1.0",
     "@nestjs/common": "6.10.14",
     "@nestjs/core": "6.10.14",
     "@nestjs/platform-express": "6.10.14",
