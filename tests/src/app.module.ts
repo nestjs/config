@@ -1,4 +1,4 @@
-import * as Joi from '@hapi/joi';
+import Joi from '@hapi/joi';
 import { DynamicModule, Module } from '@nestjs/common';
 import { join } from 'path';
 import { ConfigModule } from '../../lib/config.module';
@@ -16,6 +16,18 @@ export class AppModule {
       imports: [
         ConfigModule.forRoot({
           envFilePath: join(__dirname, '.env'),
+        }),
+      ],
+    };
+  }
+
+  static withExpandedEnvVars(): DynamicModule {
+    return {
+      module: AppModule,
+      imports: [
+        ConfigModule.forRoot({
+          envFilePath: join(__dirname, '.env.expanded'),
+          expandVariables: true,
         }),
       ],
     };
