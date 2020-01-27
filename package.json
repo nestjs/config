@@ -27,7 +27,7 @@
     "@nestjs/platform-express": "6.11.1",
     "@nestjs/testing": "6.11.1",
     "@types/hapi__joi": "16.0.8",
-    "@types/jest": "24.9.1",
+    "@types/jest": "25.1.0",
     "@types/lodash.get": "4.4.6",
     "@types/lodash.set": "4.3.6",
     "@types/node": "7.10.8",
