@@ -39,7 +39,7 @@
     "reflect-metadata": "0.1.13",
     "rimraf": "3.0.1",
     "rxjs": "6.5.4",
-    "ts-jest": "25.1.0",
+    "ts-jest": "25.2.0",
     "typescript": "3.7.5"
   },
   "peerDependencies": {
