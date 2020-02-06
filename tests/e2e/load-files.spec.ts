@@ -19,6 +19,12 @@ describe('Files', () => {
     expect(host).toEqual('host');
   });
 
+  it(`should return loaded configuration (injected through constructor)`, () => {
+    const config = app.get(AppModule).getDatabaseConfig();
+    expect(config.host).toEqual('host');
+    expect(config.port).toEqual(4000);
+  });
+
   afterEach(async () => {
     await app.close();
   });

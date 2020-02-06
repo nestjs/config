@@ -13,6 +13,7 @@ import {
 } from './config.constants';
 import { ConfigService } from './config.service';
 import { ConfigFactory, ConfigModuleOptions } from './interfaces';
+import { ConfigFactoryKeyHost } from './utils';
 import { createConfigProvider } from './utils/create-config-factory.util';
 import { getRegistrationToken } from './utils/get-registration-token.util';
 import { mergeConfigObject } from './utils/merge-configs.util';
@@ -54,7 +55,9 @@ export class ConfigModule {
     }
     const isConfigToLoad = options.load && options.load.length;
     const providers = (options.load || [])
-      .map(factory => createConfigProvider(factory))
+      .map(factory =>
+        createConfigProvider(factory as ConfigFactory & ConfigFactoryKeyHost),
+      )
       .filter(item => item) as FactoryProvider[];
 
     const configProviderTokens = providers.map(item => item.provide);
@@ -85,7 +88,7 @@ export class ConfigModule {
             },
           ]
         : providers,
-      exports: [ConfigService],
+      exports: [ConfigService, ...configProviderTokens],
     };
   }
 
@@ -94,7 +97,9 @@ export class ConfigModule {
    * @param config
    */
   static forFeature(config: ConfigFactory) {
-    const configProvider = createConfigProvider(config);
+    const configProvider = createConfigProvider(
+      config as ConfigFactory & ConfigFactoryKeyHost,
+    );
     const serviceProvider = {
       provide: ConfigService,
       useFactory: (configService: ConfigService) => configService,
@@ -117,7 +122,7 @@ export class ConfigModule {
           inject: [CONFIGURATION_TOKEN, configProvider.provide],
         },
       ],
-      exports: [ConfigService],
+      exports: [ConfigService, configProvider.provide],
     };
   }
 

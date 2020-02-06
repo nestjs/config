@@ -1,6 +1,7 @@
 import Joi from '@hapi/joi';
-import { DynamicModule, Module } from '@nestjs/common';
+import { DynamicModule, Inject, Module, Optional } from '@nestjs/common';
 import { join } from 'path';
+import { ConfigType } from '../../lib';
 import { ConfigModule } from '../../lib/config.module';
 import { ConfigService } from '../../lib/config.service';
 import databaseConfig from './database.config';
@@ -8,7 +9,12 @@ import nestedDatabaseConfig from './nested-database.config';
 
 @Module({})
 export class AppModule {
-  constructor(private readonly configService: ConfigService) {}
+  constructor(
+    private readonly configService: ConfigService,
+    @Optional()
+    @Inject(databaseConfig.KEY)
+    private readonly dbConfig: ConfigType<typeof databaseConfig>,
+  ) {}
 
   static withEnvVars(): DynamicModule {
     return {
@@ -85,6 +91,10 @@ export class AppModule {
 
   getDatabaseHost() {
     return this.configService.get('database.host');
+  }
+
+  getDatabaseConfig() {
+    return this.dbConfig;
   }
 
   getNestedDatabaseHost() {
