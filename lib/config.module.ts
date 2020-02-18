@@ -20,7 +20,13 @@ import { mergeConfigObject } from './utils/merge-configs.util';
 
 @Module({
   imports: [ConfigHostModule],
-  exports: [ConfigHostModule],
+  providers: [
+    {
+      provide: ConfigService,
+      useExisting: CONFIGURATION_SERVICE_TOKEN,
+    },
+  ],
+  exports: [ConfigHostModule, ConfigService],
 })
 export class ConfigModule {
   /**
