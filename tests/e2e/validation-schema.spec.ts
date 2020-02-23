@@ -1,5 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
+import { join } from 'path';
+import { ConfigService } from '../../lib';
 import { AppModule } from '../src/app.module';
 
 describe('Schema validation', () => {
@@ -18,5 +20,17 @@ describe('Schema validation', () => {
         'Config validation error: "PORT" is required. "DATABASE_NAME" is required',
       );
     }
+  });
+
+  it(`should parse loaded env variables`, async () => {
+    const module = await Test.createTestingModule({
+      imports: [AppModule.withSchemaValidation(join(__dirname, '.env.valid'))],
+    }).compile();
+
+    app = module.createNestApplication();
+    await app.init();
+
+    const configService = app.get(ConfigService);
+    expect(typeof configService.get('PORT')).toEqual('number');
   });
 });

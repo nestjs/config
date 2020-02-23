@@ -10,6 +10,8 @@ import {
   CONFIGURATION_LOADER,
   CONFIGURATION_SERVICE_TOKEN,
   CONFIGURATION_TOKEN,
+  VALIDATED_ENV_LOADER,
+  VALIDATED_ENV_PROPNAME,
 } from './config.constants';
 import { ConfigService } from './config.service';
 import { ConfigFactory, ConfigModuleOptions } from './interfaces';
@@ -35,6 +37,7 @@ export class ConfigModule {
    * @param options
    */
   static forRoot(options: ConfigModuleOptions = {}): DynamicModule {
+    let validatedEnvConfig: Record<string, any> | undefined = undefined;
     if (!options.ignoreEnvFile) {
       if (options.validationSchema) {
         let config = this.loadEnvFile(options);
@@ -53,6 +56,7 @@ export class ConfigModule {
         if (error) {
           throw new Error(`Config validation error: ${error.message}`);
         }
+        validatedEnvConfig = validatedConfig;
         this.assignVariablesToProcess(validatedConfig);
       } else {
         const config = this.loadEnvFile(options);
@@ -73,6 +77,17 @@ export class ConfigModule {
       inject: [CONFIGURATION_SERVICE_TOKEN, ...configProviderTokens],
     };
     providers.push(configServiceProvider);
+
+    if (validatedEnvConfig) {
+      const validatedEnvConfigLoader = {
+        provide: VALIDATED_ENV_LOADER,
+        useFactory: (host: Record<string, any>) => {
+          host[VALIDATED_ENV_PROPNAME] = validatedEnvConfig;
+        },
+        inject: [CONFIGURATION_TOKEN],
+      };
+      providers.push(validatedEnvConfigLoader);
+    }
 
     return {
       module: ConfigModule,

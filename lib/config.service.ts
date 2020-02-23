@@ -1,7 +1,10 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import get from 'lodash.get';
 import { isUndefined } from 'util';
-import { CONFIGURATION_TOKEN } from './config.constants';
+import {
+  CONFIGURATION_TOKEN,
+  VALIDATED_ENV_PROPNAME,
+} from './config.constants';
 
 @Injectable()
 export class ConfigService {
@@ -35,6 +38,13 @@ export class ConfigService {
    * @param defaultValue
    */
   get<T = any>(propertyPath: string, defaultValue?: T): T | undefined {
+    const validatedEnvValue = get(
+      this.internalConfig[VALIDATED_ENV_PROPNAME],
+      propertyPath,
+    );
+    if (!isUndefined(validatedEnvValue)) {
+      return (validatedEnvValue as unknown) as T;
+    }
     const processValue = get(process.env, propertyPath);
     if (!isUndefined(processValue)) {
       return (processValue as unknown) as T;
