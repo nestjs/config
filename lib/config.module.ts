@@ -150,22 +150,22 @@ export class ConfigModule {
   private static loadEnvFile(
     options: ConfigModuleOptions,
   ): Record<string, any> {
-    try {
-      const envFilePath = options.envFilePath || resolve(process.cwd(), '.env');
-      const config = dotenv.parse(fs.readFileSync(envFilePath));
-      if (options.expandVariables) {
-        const configExpandedVars = {
-          parsed: config,
-        };
-        return dotenvExpand(configExpandedVars).parsed || {};
+    const envFilePaths = Array.isArray(options.envFilePath)
+      ? options.envFilePath
+      : [options.envFilePath || resolve(process.cwd(), '.env')];
+    let config: ReturnType<typeof dotenv.parse> = {};
+    for (const envFilePath of envFilePaths) {
+      if (fs.existsSync(envFilePath)) {
+        config = Object.assign(
+          dotenv.parse(fs.readFileSync(envFilePath)),
+          config,
+        );
+        if (options.expandVariables) {
+          config = dotenvExpand({ parsed: config }).parsed || config;
+        }
       }
-      return config;
-    } catch (err) {
-      if (options.envFilePath || (err && err.code !== 'ENOENT')) {
-        throw err;
-      }
-      return {};
     }
+    return config;
   }
 
   private static assignVariablesToProcess(config: Record<string, any>) {
