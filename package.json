@@ -21,7 +21,7 @@
     "dotenv-expand": "5.1.0",
     "lodash.get": "4.4.2",
     "lodash.set": "4.3.2",
-    "uuid": "3.4.0"
+    "uuid": "7.0.2"
   },
   "devDependencies": {
     "@commitlint/cli": "8.3.5",
@@ -42,7 +42,7 @@
     "eslint-config-prettier": "6.10.0",
     "eslint-plugin-import": "2.20.1",
     "release-it": "13.0.2",
-    "@types/uuid": "3.4.7",
+    "@types/uuid": "7.0.0",
     "husky": "4.2.3",
     "jest": "25.1.0",
     "lint-staged": "10.0.8",
