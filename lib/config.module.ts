@@ -153,6 +153,7 @@ export class ConfigModule {
     const envFilePaths = Array.isArray(options.envFilePath)
       ? options.envFilePath
       : [options.envFilePath || resolve(process.cwd(), '.env')];
+
     let config: ReturnType<typeof dotenv.parse> = {};
     for (const envFilePath of envFilePaths) {
       if (fs.existsSync(envFilePath)) {
