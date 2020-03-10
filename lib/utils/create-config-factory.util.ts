@@ -1,5 +1,5 @@
 import { FactoryProvider } from '@nestjs/common/interfaces';
-import uuid from 'uuid/v4';
+import { v4 as uuid } from 'uuid';
 import { ConfigFactory } from '../interfaces';
 import { getConfigToken } from './get-config-token.util';
 import { ConfigFactoryKeyHost } from './register-as.util';
