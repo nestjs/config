@@ -18,9 +18,9 @@ export interface ConfigModuleOptions {
   ignoreEnvVars?: boolean;
 
   /**
-   * Path to the environment file to be loaded.
+   * Path to the environment file(s) to be loaded.
    */
-  envFilePath?: string;
+  envFilePath?: string | string[];
 
   /**
    * Environment file encoding.
