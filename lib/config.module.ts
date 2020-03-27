@@ -38,39 +38,40 @@ export class ConfigModule {
    */
   static forRoot(options: ConfigModuleOptions = {}): DynamicModule {
     let validatedEnvConfig: Record<string, any> | undefined = undefined;
-    if (!options.ignoreEnvFile) {
-      if (options.validationSchema) {
-        let config = this.loadEnvFile(options);
-        if (!options.ignoreEnvVars) {
-          config = {
-            ...process.env,
-            ...config,
-          };
-        }
-        const validationOptions = this.getSchemaValidationOptions(options);
-        const {
-          error,
-          value: validatedConfig,
-        } = options.validationSchema.validate(config, validationOptions);
 
-        if (error) {
-          throw new Error(`Config validation error: ${error.message}`);
-        }
-        validatedEnvConfig = validatedConfig;
-        this.assignVariablesToProcess(validatedConfig);
-      } else {
-        const config = this.loadEnvFile(options);
-        this.assignVariablesToProcess(config);
-      }
+    let config = this.loadEnvFile(options);
+
+    if (!options.ignoreEnvVars) {
+      config = {
+        ...process.env,
+        ...config,
+      };
     }
+
+    if (options.validationSchema) {
+      const validationOptions = this.getSchemaValidationOptions(options);
+      const {
+        error,
+        value: validatedConfig,
+      } = options.validationSchema.validate(config, validationOptions);
+
+      if (error) {
+        throw new Error(`Config validation error: ${error.message}`);
+      }
+      validatedEnvConfig = validatedConfig;
+      this.assignVariablesToProcess(validatedConfig);
+    } else {
+      this.assignVariablesToProcess(config);
+    }
+
     const isConfigToLoad = options.load && options.load.length;
     const providers = (options.load || [])
-      .map(factory =>
+      .map((factory) =>
         createConfigProvider(factory as ConfigFactory & ConfigFactoryKeyHost),
       )
-      .filter(item => item) as FactoryProvider[];
+      .filter((item) => item) as FactoryProvider[];
 
-    const configProviderTokens = providers.map(item => item.provide);
+    const configProviderTokens = providers.map((item) => item.provide);
     const configServiceProvider = {
       provide: ConfigService,
       useFactory: (configService: ConfigService) => configService,
@@ -150,6 +151,9 @@ export class ConfigModule {
   private static loadEnvFile(
     options: ConfigModuleOptions,
   ): Record<string, any> {
+    if (options.ignoreEnvFile) {
+      return {};
+    }
     const envFilePaths = Array.isArray(options.envFilePath)
       ? options.envFilePath
       : [options.envFilePath || resolve(process.cwd(), '.env')];
@@ -173,8 +177,8 @@ export class ConfigModule {
     if (!isObject(config)) {
       return;
     }
-    const keys = Object.keys(config).filter(key => !(key in process.env));
-    keys.forEach(key => (process.env[key] = config[key]));
+    const keys = Object.keys(config).filter((key) => !(key in process.env));
+    keys.forEach((key) => (process.env[key] = config[key]));
   }
 
   private static mergePartial(
