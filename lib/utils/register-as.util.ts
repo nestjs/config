@@ -3,6 +3,7 @@ import {
   PARTIAL_CONFIGURATION_PROPNAME,
 } from '../config.constants';
 import { ConfigFactory } from '../interfaces';
+import { ConfigObject } from '../types';
 import { getConfigToken } from './get-config-token.util';
 
 export type ConfigFactoryKeyHost = { KEY: string };
@@ -10,10 +11,10 @@ export type ConfigFactoryKeyHost = { KEY: string };
 /**
  * Registers the configuration object behind a specified token.
  */
-export function registerAs<T extends ConfigFactory = ConfigFactory>(
-  token: string,
-  configFactory: T,
-): T & ConfigFactoryKeyHost {
+export function registerAs<
+  TConfig extends ConfigObject,
+  TFactory extends ConfigFactory = ConfigFactory<TConfig>
+>(token: string, configFactory: TFactory): TFactory & ConfigFactoryKeyHost {
   Object.defineProperty(configFactory, PARTIAL_CONFIGURATION_KEY, {
     configurable: false,
     enumerable: false,
@@ -27,5 +28,5 @@ export function registerAs<T extends ConfigFactory = ConfigFactory>(
     writable: false,
   });
 
-  return configFactory as T & ConfigFactoryKeyHost;
+  return configFactory as TFactory & ConfigFactoryKeyHost;
 }
