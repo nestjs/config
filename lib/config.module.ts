@@ -38,31 +38,30 @@ export class ConfigModule {
    */
   static forRoot(options: ConfigModuleOptions = {}): DynamicModule {
     let validatedEnvConfig: Record<string, any> | undefined = undefined;
-    if (!options.ignoreEnvFile) {
-      if (options.validationSchema) {
-        let config = this.loadEnvFile(options);
-        if (!options.ignoreEnvVars) {
-          config = {
-            ...process.env,
-            ...config,
-          };
-        }
-        const validationOptions = this.getSchemaValidationOptions(options);
-        const {
-          error,
-          value: validatedConfig,
-        } = options.validationSchema.validate(config, validationOptions);
+    let config = options.ignoreEnvFile ? {} : this.loadEnvFile(options);
 
-        if (error) {
-          throw new Error(`Config validation error: ${error.message}`);
-        }
-        validatedEnvConfig = validatedConfig;
-        this.assignVariablesToProcess(validatedConfig);
-      } else {
-        const config = this.loadEnvFile(options);
-        this.assignVariablesToProcess(config);
-      }
+    if (!options.ignoreEnvVars) {
+      config = {
+        ...process.env,
+        ...config,
+      };
     }
+    if (options.validationSchema) {
+      const validationOptions = this.getSchemaValidationOptions(options);
+      const {
+        error,
+        value: validatedConfig,
+      } = options.validationSchema.validate(config, validationOptions);
+
+      if (error) {
+        throw new Error(`Config validation error: ${error.message}`);
+      }
+      validatedEnvConfig = validatedConfig;
+      this.assignVariablesToProcess(validatedConfig);
+    } else {
+      this.assignVariablesToProcess(config);
+    }
+
     const isConfigToLoad = options.load && options.load.length;
     const providers = (options.load || [])
       .map(factory =>

@@ -22,6 +22,21 @@ describe('Schema validation', () => {
     }
   });
 
+  it(`should validate env variables even when ignoreEnvFile is true`, async () => {
+    try {
+      const module = await Test.createTestingModule({
+        imports: [AppModule.withSchemaValidation(undefined, true)],
+      }).compile();
+
+      app = module.createNestApplication();
+      await app.init();
+    } catch (err) {
+      expect(err.message).toEqual(
+        'Config validation error: "PORT" is required. "DATABASE_NAME" is required',
+      );
+    }
+  });
+
   it(`should parse loaded env variables`, async () => {
     const module = await Test.createTestingModule({
       imports: [AppModule.withSchemaValidation(join(__dirname, '.env.valid'))],
