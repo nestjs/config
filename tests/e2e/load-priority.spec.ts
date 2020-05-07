@@ -39,9 +39,9 @@ describe('Environment variables and .env files', () => {
       await app.init();
     });
 
-    it('should choose env var over dotenv', () => {
+    it('should choose dotenv over env vars', () => {
       const configService = app.get(ConfigService);
-      expect(configService.get('PORT')).toEqual('8000');
+      expect(configService.get('PORT')).toEqual('4000');
     });
   });
 
@@ -58,9 +58,9 @@ describe('Environment variables and .env files', () => {
       await app.init();
     });
 
-    it('should choose env var over dotenv', () => {
+    it('should choose dotenv over env vars', () => {
       const configService = app.get(ConfigService);
-      expect(configService.get('PORT')).toEqual(8000);
+      expect(configService.get('PORT')).toEqual(4000);
     });
   });
 
