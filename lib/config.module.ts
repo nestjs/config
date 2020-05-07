@@ -173,7 +173,11 @@ export class ConfigModule {
     if (!isObject(config)) {
       return;
     }
-    const keys = Object.keys(config).filter(key => !(key in process.env));
+    const keys = Object.keys(config).filter(
+      key =>
+        !(key in process.env) ||
+        (key in process.env && process.env[key] !== config[key]),
+    );
     keys.forEach(key => (process.env[key] = config[key]));
   }
 
