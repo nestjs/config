@@ -72,12 +72,16 @@ export class AppModule {
     };
   }
 
-  static withSchemaValidation(envFilePath?: string): DynamicModule {
+  static withSchemaValidation(
+    envFilePath?: string,
+    ignoreEnvFile?: boolean,
+  ): DynamicModule {
     return {
       module: AppModule,
       imports: [
         ConfigModule.forRoot({
           envFilePath,
+          ignoreEnvFile,
           validationSchema: Joi.object({
             PORT: Joi.number().required(),
             DATABASE_NAME: Joi.string().required(),
