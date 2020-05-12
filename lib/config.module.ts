@@ -42,8 +42,8 @@ export class ConfigModule {
 
     if (!options.ignoreEnvVars) {
       config = {
-        ...process.env,
         ...config,
+        ...process.env,
       };
     }
     if (options.validationSchema) {
@@ -172,11 +172,7 @@ export class ConfigModule {
     if (!isObject(config)) {
       return;
     }
-    const keys = Object.keys(config).filter(
-      key =>
-        !(key in process.env) ||
-        (key in process.env && process.env[key] !== config[key]),
-    );
+    const keys = Object.keys(config).filter(key => !(key in process.env));
     keys.forEach(key => (process.env[key] = config[key]));
   }
 
