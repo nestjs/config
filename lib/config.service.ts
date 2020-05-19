@@ -8,7 +8,7 @@ import {
 import { NoInferType } from './types';
 
 @Injectable()
-export class ConfigService {
+export class ConfigService<K = any> {
   constructor(
     @Optional()
     @Inject(CONFIGURATION_TOKEN)
@@ -22,7 +22,7 @@ export class ConfigService {
    * @param propertyPath
    * @param defaultValue
    */
-  get<T = any>(propertyPath: string): T | undefined;
+  get<T = any>(propertyPath: keyof K): T | undefined;
   /**
    * Get a configuration value (either custom configuration or process environment variable)
    * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
@@ -30,7 +30,7 @@ export class ConfigService {
    * @param propertyPath
    * @param defaultValue
    */
-  get<T = any>(propertyPath: string, defaultValue: NoInferType<T>): T;
+  get<T = any>(propertyPath: keyof K, defaultValue: NoInferType<T>): T;
   /**
    * Get a configuration value (either custom configuration or process environment variable)
    * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
@@ -38,7 +38,7 @@ export class ConfigService {
    * @param propertyPath
    * @param defaultValue
    */
-  get<T = any>(propertyPath: string, defaultValue?: T): T | undefined {
+  get<T = any>(propertyPath: keyof K, defaultValue?: T): T | undefined {
     const validatedEnvValue = get(
       this.internalConfig[VALIDATED_ENV_PROPNAME],
       propertyPath,
