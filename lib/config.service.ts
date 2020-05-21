@@ -8,7 +8,7 @@ import {
 import { NoInferType } from './types';
 
 @Injectable()
-export class ConfigService<K = any> {
+export class ConfigService<K = Record<string, any>> {
   constructor(
     @Optional()
     @Inject(CONFIGURATION_TOKEN)
