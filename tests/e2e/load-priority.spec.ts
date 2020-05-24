@@ -13,11 +13,11 @@ describe('Environment variables and .env files', () => {
   describe('without conflicts', () => {
     beforeAll(async () => {
       process.env['NAME'] = 'TEST';
-      const module = await Test.createTestingModule({
+      const moduleRef = await Test.createTestingModule({
         imports: [AppModule.withEnvVars()],
       }).compile();
 
-      app = module.createNestApplication();
+      app = moduleRef.createNestApplication();
       await app.init();
     });
 
@@ -31,11 +31,11 @@ describe('Environment variables and .env files', () => {
   describe('with conflicts', () => {
     beforeAll(async () => {
       process.env['PORT'] = '8000';
-      const module = await Test.createTestingModule({
+      const moduleRef = await Test.createTestingModule({
         imports: [AppModule.withEnvVars()],
       }).compile();
 
-      app = module.createNestApplication();
+      app = moduleRef.createNestApplication();
       await app.init();
     });
 
@@ -48,13 +48,13 @@ describe('Environment variables and .env files', () => {
   describe('with conflicts and schema validation', () => {
     beforeAll(async () => {
       process.env['PORT'] = '8000';
-      const module = await Test.createTestingModule({
+      const moduleRef = await Test.createTestingModule({
         imports: [
           AppModule.withSchemaValidation(join(__dirname, '.env.valid')),
         ],
       }).compile();
 
-      app = module.createNestApplication();
+      app = moduleRef.createNestApplication();
       await app.init();
     });
 
