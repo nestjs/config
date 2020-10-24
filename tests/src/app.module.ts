@@ -16,6 +16,18 @@ export class AppModule {
     private readonly dbConfig: ConfigType<typeof databaseConfig>,
   ) {}
 
+  static withCache(): DynamicModule {
+    return {
+      module: AppModule,
+      imports: [
+        ConfigModule.forRoot({
+          cache: true,
+          envFilePath: join(__dirname, '.env'),
+        }),
+      ],
+    };
+  }
+
   static withEnvVars(): DynamicModule {
     return {
       module: AppModule,

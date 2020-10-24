@@ -1,5 +1,7 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import get from 'lodash.get';
+import set from 'lodash.set';
+import has from 'lodash.has';
 import { isUndefined } from 'util';
 import {
   CONFIGURATION_TOKEN,
@@ -9,6 +11,17 @@ import { NoInferType } from './types';
 
 @Injectable()
 export class ConfigService<K = Record<string, any>> {
+  get cachingEnabled(): boolean {
+    return this._cachingEnabled;
+  }
+
+  set cachingEnabled(value: boolean) {
+    this._cachingEnabled = value;
+  }
+
+  private readonly cache: K = {} as any;
+  private _cachingEnabled = false;
+
   constructor(
     @Optional()
     @Inject(CONFIGURATION_TOKEN)
@@ -39,18 +52,68 @@ export class ConfigService<K = Record<string, any>> {
    * @param defaultValue
    */
   get<T = any>(propertyPath: keyof K, defaultValue?: T): T | undefined {
+    if (
+      this.cachingEnabled &&
+      has(this.cache as Record<any, any>, propertyPath)
+    ) {
+      const cachedValue = this.getFromCache(propertyPath, defaultValue);
+      /** if cached value was once set as undefined always return default value */
+      return !isUndefined(cachedValue) ? cachedValue : defaultValue;
+    }
+
+    const validatedEnvValue = this.getFromValidatedEnv(propertyPath);
+    if (!isUndefined(validatedEnvValue)) {
+      return validatedEnvValue;
+    }
+
+    const processEnvValue = this.getFromProcessEnv(propertyPath);
+    if (!isUndefined(processEnvValue)) {
+      return processEnvValue;
+    }
+
+    const internalValue = this.getFromInternalConfig(propertyPath);
+    if (!isUndefined(internalValue)) {
+      return internalValue;
+    }
+
+    return defaultValue;
+  }
+
+  private getFromCache<T = any>(
+    propertyPath: keyof K,
+    defaultValue?: T,
+  ): T | undefined {
+    const cachedValue = get(this.cache, propertyPath);
+    return isUndefined(cachedValue)
+      ? defaultValue
+      : ((cachedValue as unknown) as T);
+  }
+
+  private getFromValidatedEnv<T = any>(propertyPath: keyof K): T | undefined {
     const validatedEnvValue = get(
       this.internalConfig[VALIDATED_ENV_PROPNAME],
       propertyPath,
     );
-    if (!isUndefined(validatedEnvValue)) {
-      return (validatedEnvValue as unknown) as T;
-    }
+    this.setInCache(propertyPath, validatedEnvValue);
+
+    return (validatedEnvValue as unknown) as T;
+  }
+
+  private getFromProcessEnv<T = any>(propertyPath: keyof K): T | undefined {
     const processValue = get(process.env, propertyPath);
-    if (!isUndefined(processValue)) {
-      return (processValue as unknown) as T;
-    }
+    this.setInCache(propertyPath, processValue);
+
+    return (processValue as unknown) as T;
+  }
+
+  private getFromInternalConfig<T = any>(propertyPath: keyof K): T | undefined {
     const internalValue = get(this.internalConfig, propertyPath);
-    return isUndefined(internalValue) ? defaultValue : internalValue;
+    this.setInCache(propertyPath, internalValue);
+
+    return internalValue;
+  }
+
+  private setInCache(propertyPath: keyof K, value: any): void {
+    set(this.cache as Record<any, any>, propertyPath, value);
   }
 }
