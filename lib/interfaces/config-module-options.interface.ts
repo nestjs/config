@@ -34,7 +34,7 @@ export interface ConfigModuleOptions {
 
   /**
    * Schema validation options.
-   * See: https://hapi.dev/family/joi/?v=16.1.8#anyvalidatevalue-options
+   * See: https://joi.dev/api/?v=17.3.0#anyvalidatevalue-options
    */
   validationOptions?: Record<string, any>;
 
