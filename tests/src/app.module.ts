@@ -6,6 +6,7 @@ import { ConfigModule } from '../../lib/config.module';
 import { ConfigService } from '../../lib/config.service';
 import databaseConfig from './database.config';
 import nestedDatabaseConfig from './nested-database.config';
+import { Config } from './config';
 
 @Module({})
 export class AppModule {
@@ -97,6 +98,18 @@ export class AppModule {
       imports: [
         ConfigModule.forRoot(),
         ConfigModule.forFeature(databaseConfig),
+      ],
+    };
+  }
+
+  static withEnvAndClassOptions(): DynamicModule {
+    return {
+      module: AppModule,
+      imports: [
+        ConfigModule.forRoot({
+          class: Config,
+          envFilePath: join(__dirname, '.env'),
+        }),
       ],
     };
   }

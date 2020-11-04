@@ -19,6 +19,8 @@ import { ConfigFactoryKeyHost } from './utils';
 import { createConfigProvider } from './utils/create-config-factory.util';
 import { getRegistrationToken } from './utils/get-registration-token.util';
 import { mergeConfigObject } from './utils/merge-configs.util';
+import { plainToClass } from 'class-transformer';
+import { validateSync } from 'class-validator';
 
 @Module({
   imports: [ConfigHostModule],
@@ -88,6 +90,26 @@ export class ConfigModule {
       providers.push(validatedEnvConfigLoader);
     }
 
+    const additionalExports = [];
+    if (options.class) {
+      const cls = options.class;
+      const configProvider = {
+        provide: cls,
+        useFactory: () => {
+          const instance = plainToClass(cls, config, {
+            excludeExtraneousValues: true,
+          });
+          const validationErrors = validateSync(instance);
+          if (validationErrors.length > 0) {
+            throw validationErrors.pop();
+          }
+          return instance;
+        },
+      };
+      additionalExports.push(cls);
+      providers.push(configProvider);
+    }
+
     return {
       module: ConfigModule,
       global: options.isGlobal,
@@ -108,7 +130,7 @@ export class ConfigModule {
             },
           ]
         : providers,
-      exports: [ConfigService, ...configProviderTokens],
+      exports: [ConfigService, ...configProviderTokens, ...additionalExports],
     };
   }
 

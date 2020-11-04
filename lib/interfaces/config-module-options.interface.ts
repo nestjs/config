@@ -1,4 +1,5 @@
 import { ConfigFactory } from './config-factory.interface';
+import { ClassType } from 'class-transformer/ClassTransformer';
 
 export interface ConfigModuleOptions {
   /**
@@ -50,4 +51,12 @@ export interface ConfigModuleOptions {
    * this property is set to true.
    */
   expandVariables?: boolean;
+
+  /**
+   * An optional class decorated with class-validator and class-transformer decorators
+   * that will be exported after it went through validation and transformation.
+   * This class gets instantiated after handling the other configuration flags.
+   * If the validation fails the first error will be thrown upwards.
+   */
+  class?: ClassType<any>;
 }
