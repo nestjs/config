@@ -18,9 +18,19 @@ export interface ConfigModuleOptions {
   ignoreEnvVars?: boolean;
 
   /**
+   * If "true", yaml files (`.yml`) will be used.
+   */
+  useYmlFile?: boolean;
+
+  /**
    * Path to the environment file(s) to be loaded.
    */
   envFilePath?: string | string[];
+
+  /**
+   * Path to the environment yaml file(s) to be loaded.
+   */
+  ymlFilePath?: string | string[];
 
   /**
    * Environment file encoding.

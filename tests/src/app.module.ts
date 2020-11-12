@@ -101,6 +101,18 @@ export class AppModule {
     };
   }
 
+  static withYmlConfigurations(): DynamicModule {
+    return {
+      module: AppModule,
+      imports: [
+        ConfigModule.forRoot({
+          ymlFilePath: [join(__dirname, 'config.yml')],
+          useYmlFile: true,
+        }),
+      ],
+    };
+  }
+
   getEnvVariables() {
     return process.env;
   }

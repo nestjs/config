@@ -1,0 +1,6 @@
+http:
+  port: 3000
+admin:
+  port: 9876
+  database:
+    port: 5800

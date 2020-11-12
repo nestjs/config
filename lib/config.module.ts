@@ -2,6 +2,7 @@ import { DynamicModule, Module } from '@nestjs/common';
 import { FactoryProvider } from '@nestjs/common/interfaces';
 import * as dotenv from 'dotenv';
 import dotenvExpand from 'dotenv-expand';
+import * as yaml from 'js-yaml';
 import * as fs from 'fs';
 import { resolve } from 'path';
 import { isObject } from 'util';
@@ -45,6 +46,9 @@ export class ConfigModule {
         ...config,
         ...process.env,
       };
+    }
+    if (options.useYmlFile) {
+      config = this.loadYmlFile(options);
     }
     if (options.validationSchema) {
       const validationOptions = this.getSchemaValidationOptions(options);
@@ -168,12 +172,43 @@ export class ConfigModule {
     return config;
   }
 
+  private static loadYmlFile(
+    options: ConfigModuleOptions,
+  ): Record<string, any> {
+    const ymlFilePaths = Array.isArray(options.ymlFilePath)
+      ? options.ymlFilePath
+      : [options.ymlFilePath || resolve(process.cwd(), 'config.yml')];
+
+    let config: ReturnType<typeof yaml.load> = {};
+    for (const ymlFilePath of ymlFilePaths) {
+      if (fs.existsSync(ymlFilePath)) {
+        config = yaml.load(fs.readFileSync(ymlFilePath, 'utf8'));
+      }
+    }
+    return config;
+  }
+
   private static assignVariablesToProcess(config: Record<string, any>) {
     if (!isObject(config)) {
       return;
     }
     const keys = Object.keys(config).filter(key => !(key in process.env));
-    keys.forEach(key => (process.env[key] = config[key]));
+    for (const property in keys) {
+      process.env[keys[property]] = config[keys[property]];
+      if (isObject(config[keys[property]])) {
+        const jsonArray = JSON.parse(JSON.stringify(config[keys[property]]));
+        for (var k in jsonArray) {
+          process.env[keys[property] + '.' + k] = jsonArray[k];
+          if (isObject(jsonArray[k])) {
+            const anotherJsonArray = JSON.parse(JSON.stringify(jsonArray[k]));
+            for (var l in anotherJsonArray) {
+              process.env[keys[property] + '.' + k + '.' + l] =
+                anotherJsonArray[l];
+            }
+          }
+        }
+      }
+    }
   }
 
   private static mergePartial(
