@@ -194,19 +194,12 @@ export class ConfigModule {
     }
     const keys = Object.keys(config).filter(key => !(key in process.env));
     for (const property in keys) {
-      process.env[keys[property]] = config[keys[property]];
-      if (isObject(config[keys[property]])) {
-        const jsonArray = JSON.parse(JSON.stringify(config[keys[property]]));
-        for (var k in jsonArray) {
-          process.env[keys[property] + '.' + k] = jsonArray[k];
-          if (isObject(jsonArray[k])) {
-            const anotherJsonArray = JSON.parse(JSON.stringify(jsonArray[k]));
-            for (var l in anotherJsonArray) {
-              process.env[keys[property] + '.' + k + '.' + l] =
-                anotherJsonArray[l];
-            }
-          }
-        }
+      let key = keys[property];
+      let value = config[keys[property]];
+      if (!isObject(value)) {
+        process.env[key] = value;
+      } else {
+        this.assignObjectsVarToProcess(key, value);
       }
     }
   }
@@ -232,5 +225,25 @@ export class ConfigModule {
       abortEarly: false,
       allowUnknown: true,
     };
+  }
+
+  private static assignObjectsVarToProcess(
+    key: string,
+    config: Record<string, any>,
+  ) {
+    if (!isObject(config)) {
+      return;
+    }
+
+    const jsonArray = JSON.parse(JSON.stringify(config));
+    for (var k in jsonArray) {
+      let newKey = key + '.' + k;
+      let value = jsonArray[k];
+      if (!isObject(value)) {
+        process.env[newKey] = value;
+      } else {
+        this.assignObjectsVarToProcess(newKey, value);
+      }
+    }
   }
 }
