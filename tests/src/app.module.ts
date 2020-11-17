@@ -91,6 +91,23 @@ export class AppModule {
     };
   }
 
+  static withValidateFunction(
+    validate: (config: Record<string, any>) => Record<string, any>,
+    envFilePath?: string,
+    ignoreEnvFile?: boolean,
+  ): DynamicModule {
+    return {
+      module: AppModule,
+      imports: [
+        ConfigModule.forRoot({
+          envFilePath,
+          ignoreEnvFile,
+          validate,
+        }),
+      ],
+    };
+  }
+
   static withForFeature(): DynamicModule {
     return {
       module: AppModule,
