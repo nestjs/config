@@ -2,7 +2,6 @@ import { DynamicModule, Module } from '@nestjs/common';
 import { FactoryProvider } from '@nestjs/common/interfaces';
 import * as dotenv from 'dotenv';
 import dotenvExpand from 'dotenv-expand';
-import * as yaml from 'js-yaml';
 import * as fs from 'fs';
 import { resolve } from 'path';
 import { isObject } from 'util';
@@ -47,10 +46,11 @@ export class ConfigModule {
         ...process.env,
       };
     }
-    if (options.useYmlFile) {
-      config = this.loadYmlFile(options);
-    }
-    if (options.validationSchema) {
+    if (options.validate) {
+      const validatedConfig = options.validate(config);
+      validatedEnvConfig = validatedConfig;
+      this.assignVariablesToProcess(validatedConfig);
+    } else if (options.validationSchema) {
       const validationOptions = this.getSchemaValidationOptions(options);
       const {
         error,
@@ -76,7 +76,12 @@ export class ConfigModule {
     const configProviderTokens = providers.map(item => item.provide);
     const configServiceProvider = {
       provide: ConfigService,
-      useFactory: (configService: ConfigService) => configService,
+      useFactory: (configService: ConfigService) => {
+        if (options.cache) {
+          configService.isCacheEnabled = true;
+        }
+        return configService;
+      },
       inject: [CONFIGURATION_SERVICE_TOKEN, ...configProviderTokens],
     };
     providers.push(configServiceProvider);
@@ -172,36 +177,12 @@ export class ConfigModule {
     return config;
   }
 
-  private static loadYmlFile(
-    options: ConfigModuleOptions,
-  ): Record<string, any> {
-    const ymlFilePaths = Array.isArray(options.ymlFilePath)
-      ? options.ymlFilePath
-      : [options.ymlFilePath || resolve(process.cwd(), 'config.yml')];
-
-    let config: ReturnType<typeof yaml.load> = {};
-    for (const ymlFilePath of ymlFilePaths) {
-      if (fs.existsSync(ymlFilePath)) {
-        config = yaml.load(fs.readFileSync(ymlFilePath, 'utf8'));
-      }
-    }
-    return config;
-  }
-
   private static assignVariablesToProcess(config: Record<string, any>) {
     if (!isObject(config)) {
       return;
     }
     const keys = Object.keys(config).filter(key => !(key in process.env));
-    for (const property in keys) {
-      let key = keys[property];
-      let value = config[keys[property]];
-      if (!isObject(value)) {
-        process.env[key] = value;
-      } else {
-        this.assignObjectsVarToProcess(key, value);
-      }
-    }
+    keys.forEach(key => (process.env[key] = config[key]));
   }
 
   private static mergePartial(
@@ -225,25 +206,5 @@ export class ConfigModule {
       abortEarly: false,
       allowUnknown: true,
     };
-  }
-
-  private static assignObjectsVarToProcess(
-    key: string,
-    config: Record<string, any>,
-  ) {
-    if (!isObject(config)) {
-      return;
-    }
-
-    const jsonArray = JSON.parse(JSON.stringify(config));
-    for (var k in jsonArray) {
-      let newKey = key + '.' + k;
-      let value = jsonArray[k];
-      if (!isObject(value)) {
-        process.env[newKey] = value;
-      } else {
-        this.assignObjectsVarToProcess(newKey, value);
-      }
-    }
   }
 }

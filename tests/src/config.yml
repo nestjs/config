@@ -1,6 +1,27 @@
 http:
-  port: 3000
+  host: 'localhost'
+  port: 8080
+
+https:
+  host: 'localhost'
+  port: 8443
+  tls: 'tls.key'
+
 admin:
-  port: 9876
-  database:
-    port: 5800
+  host: 'localhost'
+  port: 9080
+
+serviceEndpoints: 
+  cats: 
+    url: 'http://localhost/cats/'
+  dogs:
+    url: 'http://localhost/dogs/'
+
+db: 
+  postgres: 
+    url: 'localhost'
+    port: 5432
+    database: 'yaml-db'
+    
+  sqlite: 
+    database: 'sqlite.db'
