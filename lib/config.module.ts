@@ -46,7 +46,11 @@ export class ConfigModule {
         ...process.env,
       };
     }
-    if (options.validationSchema) {
+    if (options.validate) {
+      const validatedConfig = options.validate(config);
+      validatedEnvConfig = validatedConfig;
+      this.assignVariablesToProcess(validatedConfig);
+    } else if (options.validationSchema) {
       const validationOptions = this.getSchemaValidationOptions(options);
       const {
         error,
