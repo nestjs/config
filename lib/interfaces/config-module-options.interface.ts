@@ -2,6 +2,13 @@ import { ConfigFactory } from './config-factory.interface';
 
 export interface ConfigModuleOptions {
   /**
+   * If "true", values from the process.env object will be cached in the memory.
+   * This improves the overall application performance.
+   * See: https://github.com/nodejs/node/issues/3104
+   */
+  cache?: boolean;
+
+  /**
    * If "true", registers `ConfigModule` as a global module.
    * See: https://docs.nestjs.com/modules#global-modules
    */

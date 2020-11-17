@@ -76,7 +76,12 @@ export class ConfigModule {
     const configProviderTokens = providers.map(item => item.provide);
     const configServiceProvider = {
       provide: ConfigService,
-      useFactory: (configService: ConfigService) => configService,
+      useFactory: (configService: ConfigService) => {
+        if (options.cache) {
+          configService.isCacheEnabled = true;
+        }
+        return configService;
+      },
       inject: [CONFIGURATION_SERVICE_TOKEN, ...configProviderTokens],
     };
     providers.push(configServiceProvider);
