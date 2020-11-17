@@ -11,7 +11,6 @@ describe('Schema validation', () => {
     if (!('PORT' in config && 'DATABASE_NAME' in config)) {
       throw new Error(errorMessage);
     }
-
     return {};
   };
 

@@ -28,12 +28,11 @@ export interface ConfigModuleOptions {
   encoding?: string;
 
   /**
-   * Function to validate env vars, it takes an object containing environment
+   * Custom function to validate environment variables. It takes an object containing environment
    * variables as input and outputs validated environment variables.
-   * If exception is thrown in the function it would prevent the application
-   * from bootstrapping.
+   * If exception is thrown in the function it would prevent the application from bootstrapping.
    * Also, environment variables can be edited through this function, changes
-   * will be reflected in process.env.
+   * will be reflected in the process.env object.
    */
   validate?: (config: Record<string, any>) => Record<string, any>;
 
