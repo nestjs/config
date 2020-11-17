@@ -2,6 +2,14 @@ import { ConfigFactory } from './config-factory.interface';
 
 export interface ConfigModuleOptions {
   /**
+   * If "true" values from process.env are read
+   * only once, the cache will be used after that.
+   * This will improve the performance.
+   * See: https://github.com/nodejs/node/issues/3104
+   */
+  cache?: boolean;
+
+  /**
    * If "true", registers `ConfigModule` as a global module.
    * See: https://docs.nestjs.com/modules#global-modules
    */
