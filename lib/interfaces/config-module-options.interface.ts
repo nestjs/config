@@ -2,9 +2,8 @@ import { ConfigFactory } from './config-factory.interface';
 
 export interface ConfigModuleOptions {
   /**
-   * If "true" values from process.env are read
-   * only once, the cache will be used after that.
-   * This will improve the performance.
+   * If "true", values from the process.env object will be cached in the memory.
+   * This improves the overall application performance.
    * See: https://github.com/nodejs/node/issues/3104
    */
   cache?: boolean;

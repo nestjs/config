@@ -1,7 +1,7 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import get from 'lodash.get';
-import set from 'lodash.set';
 import has from 'lodash.has';
+import set from 'lodash.set';
 import { isUndefined } from 'util';
 import {
   CONFIGURATION_TOKEN,
@@ -11,16 +11,16 @@ import { NoInferType } from './types';
 
 @Injectable()
 export class ConfigService<K = Record<string, any>> {
-  get cachingEnabled(): boolean {
-    return this._cachingEnabled;
+  get isCacheEnabled(): boolean {
+    return this._isCacheEnabled;
   }
 
-  set cachingEnabled(value: boolean) {
-    this._cachingEnabled = value;
+  set isCacheEnabled(value: boolean) {
+    this._isCacheEnabled = value;
   }
 
   private readonly cache: K = {} as any;
-  private _cachingEnabled = false;
+  private _isCacheEnabled = false;
 
   constructor(
     @Optional()
@@ -53,11 +53,10 @@ export class ConfigService<K = Record<string, any>> {
    */
   get<T = any>(propertyPath: keyof K, defaultValue?: T): T | undefined {
     if (
-      this.cachingEnabled &&
+      this.isCacheEnabled &&
       has(this.cache as Record<any, any>, propertyPath)
     ) {
       const cachedValue = this.getFromCache(propertyPath, defaultValue);
-      /** if cached value was once set as undefined always return default value */
       return !isUndefined(cachedValue) ? cachedValue : defaultValue;
     }
 
