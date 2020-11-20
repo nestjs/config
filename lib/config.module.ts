@@ -125,7 +125,7 @@ export class ConfigModule {
    * Registers configuration object (partial registration).
    * @param config
    */
-  static forFeature(config: ConfigFactory) {
+  static forFeature(config: ConfigFactory): DynamicModule {
     const configProvider = createConfigProvider(
       config as ConfigFactory & ConfigFactoryKeyHost,
     );

@@ -23,6 +23,7 @@ export class AppModule {
         ConfigModule.forRoot({
           cache: true,
           envFilePath: join(__dirname, '.env'),
+          load: [databaseConfig],
         }),
       ],
     };

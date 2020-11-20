@@ -19,7 +19,7 @@ export class ConfigService<K = Record<string, any>> {
     this._isCacheEnabled = value;
   }
 
-  private readonly cache: K = {} as any;
+  private readonly cache: Partial<K> = {} as any;
   private _isCacheEnabled = false;
 
   constructor(
@@ -52,20 +52,12 @@ export class ConfigService<K = Record<string, any>> {
    * @param defaultValue
    */
   get<T = any>(propertyPath: keyof K, defaultValue?: T): T | undefined {
-    if (
-      this.isCacheEnabled &&
-      has(this.cache as Record<any, any>, propertyPath)
-    ) {
-      const cachedValue = this.getFromCache(propertyPath, defaultValue);
-      return !isUndefined(cachedValue) ? cachedValue : defaultValue;
-    }
-
     const validatedEnvValue = this.getFromValidatedEnv(propertyPath);
     if (!isUndefined(validatedEnvValue)) {
       return validatedEnvValue;
     }
 
-    const processEnvValue = this.getFromProcessEnv(propertyPath);
+    const processEnvValue = this.getFromProcessEnv(propertyPath, defaultValue);
     if (!isUndefined(processEnvValue)) {
       return processEnvValue;
     }
@@ -93,26 +85,35 @@ export class ConfigService<K = Record<string, any>> {
       this.internalConfig[VALIDATED_ENV_PROPNAME],
       propertyPath,
     );
-    this.setInCache(propertyPath, validatedEnvValue);
-
     return (validatedEnvValue as unknown) as T;
   }
 
-  private getFromProcessEnv<T = any>(propertyPath: keyof K): T | undefined {
+  private getFromProcessEnv<T = any>(
+    propertyPath: keyof K,
+    defaultValue: any,
+  ): T | undefined {
+    if (
+      this.isCacheEnabled &&
+      has(this.cache as Record<any, any>, propertyPath)
+    ) {
+      const cachedValue = this.getFromCache(propertyPath, defaultValue);
+      return !isUndefined(cachedValue) ? cachedValue : defaultValue;
+    }
     const processValue = get(process.env, propertyPath);
-    this.setInCache(propertyPath, processValue);
+    this.setInCacheIfDefined(propertyPath, processValue);
 
     return (processValue as unknown) as T;
   }
 
   private getFromInternalConfig<T = any>(propertyPath: keyof K): T | undefined {
     const internalValue = get(this.internalConfig, propertyPath);
-    this.setInCache(propertyPath, internalValue);
-
     return internalValue;
   }
 
-  private setInCache(propertyPath: keyof K, value: any): void {
+  private setInCacheIfDefined(propertyPath: keyof K, value: any): void {
+    if (typeof value === 'undefined') {
+      return;
+    }
     set(this.cache as Record<any, any>, propertyPath, value);
   }
 }
