@@ -6,6 +6,7 @@ import { ConfigModule } from '../../lib/config.module';
 import { ConfigService } from '../../lib/config.service';
 import databaseConfig from './database.config';
 import nestedDatabaseConfig from './nested-database.config';
+import sameKeyDatabaseConfig from './same-key-database.config';
 
 @Module({})
 export class AppModule {
@@ -69,6 +70,18 @@ export class AppModule {
       imports: [
         ConfigModule.forRoot({
           load: [databaseConfig],
+        }),
+      ],
+    };
+  }
+
+  static withLoadedSameKeyConfigurations(): DynamicModule {
+    return {
+      module: AppModule,
+      imports: [
+        ConfigModule.forRoot({
+          envFilePath: join(__dirname, '.env'),
+          load: [sameKeyDatabaseConfig],
         }),
       ],
     };
@@ -145,5 +158,9 @@ export class AppModule {
 
   getNestedDatabaseHost() {
     return this.configService.get('database.driver.host');
+  }
+
+  getPortInSameKeyConfig() {
+    return this.configService.get('PORT');
   }
 }

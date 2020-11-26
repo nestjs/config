@@ -57,14 +57,14 @@ export class ConfigService<K = Record<string, any>> {
       return validatedEnvValue;
     }
 
-    const processEnvValue = this.getFromProcessEnv(propertyPath, defaultValue);
-    if (!isUndefined(processEnvValue)) {
-      return processEnvValue;
-    }
-
     const internalValue = this.getFromInternalConfig(propertyPath);
     if (!isUndefined(internalValue)) {
       return internalValue;
+    }
+
+    const processEnvValue = this.getFromProcessEnv(propertyPath, defaultValue);
+    if (!isUndefined(processEnvValue)) {
+      return processEnvValue;
     }
 
     return defaultValue;
