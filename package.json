@@ -33,7 +33,7 @@
     "@nestjs/platform-express": "7.5.5",
     "@nestjs/testing": "7.5.5",
     "@types/hapi__joi": "17.1.6",
-    "@types/jest": "26.0.15",
+    "@types/jest": "26.0.16",
     "@types/lodash.get": "4.4.6",
     "@types/lodash.has": "4.5.6",
     "@types/lodash.set": "4.3.6",
