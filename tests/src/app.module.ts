@@ -10,7 +10,7 @@ import nestedDatabaseConfig from './nested-database.config';
 @Module({})
 export class AppModule {
   constructor(
-    private readonly configService: ConfigService,
+    private readonly configService: ConfigService<{ 'database.host': string, 'database.driver.host': string }>,
     @Optional()
     @Inject(databaseConfig.KEY)
     private readonly dbConfig: ConfigType<typeof databaseConfig>,
@@ -135,7 +135,7 @@ export class AppModule {
     return process.env;
   }
 
-  getDatabaseHost() {
+  getDatabaseHost(): string {
     return this.configService.get('database.host');
   }
 
@@ -143,7 +143,7 @@ export class AppModule {
     return this.dbConfig;
   }
 
-  getNestedDatabaseHost() {
+  getNestedDatabaseHost(): string {
     return this.configService.get('database.driver.host');
   }
 }

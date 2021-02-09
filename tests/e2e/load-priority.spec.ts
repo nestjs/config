@@ -22,7 +22,7 @@ describe('Environment variables and .env files', () => {
     });
 
     it(`should return loaded env variables from vars and dotenv`, () => {
-      const configService = app.get(ConfigService);
+      const configService: ConfigService<{ [key in 'PORT' | 'NAME']: unknown }> = app.get(ConfigService);
       expect(configService.get('PORT')).toEqual('4000');
       expect(configService.get('NAME')).toEqual('TEST');
     });
@@ -40,7 +40,7 @@ describe('Environment variables and .env files', () => {
     });
 
     it('should choose env vars over dotenv', () => {
-      const configService = app.get(ConfigService);
+      const configService: ConfigService<{ PORT: unknown }> = app.get(ConfigService);
       expect(configService.get('PORT')).toEqual('8000');
     });
   });
@@ -59,7 +59,7 @@ describe('Environment variables and .env files', () => {
     });
 
     it('should choose env vars over dotenv', () => {
-      const configService = app.get(ConfigService);
+      const configService: ConfigService<{ PORT: unknown }> = app.get(ConfigService);
       expect(configService.get('PORT')).toEqual(8000);
     });
   });

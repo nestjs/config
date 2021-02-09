@@ -21,13 +21,13 @@ describe('Cache', () => {
     });
 
     it(`should return loaded env variables from vars`, () => {
-      const configService = app.get(ConfigService);
+      const configService: ConfigService<{ NAME: string }> = app.get(ConfigService);
       expect(configService.get('NAME')).toEqual('TEST');
     });
 
     it(`should return new vars`, () => {
       process.env['NAME'] = 'CHANGED';
-      const configService = app.get(ConfigService);
+      const configService: ConfigService<{ NAME: string }> = app.get(ConfigService);
       expect(configService.get('NAME')).toEqual('CHANGED');
     });
   });
@@ -44,13 +44,13 @@ describe('Cache', () => {
     });
 
     it(`should return loaded env variables from vars`, () => {
-      const configService = app.get(ConfigService);
+      const configService: ConfigService<{ NAME: string }> = app.get(ConfigService);
       expect(configService.get('NAME')).toEqual('TEST');
     });
 
     it(`should return cached vars`, () => {
       process.env['NAME'] = 'CHANGED';
-      const configService = app.get(ConfigService);
+      const configService: ConfigService<{ NAME: string }> = app.get(ConfigService);
       expect(configService.get('NAME')).toEqual('TEST');
     });
   });

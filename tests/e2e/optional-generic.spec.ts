@@ -21,13 +21,13 @@ describe('Optional Generic()', () => {
       ConfigService,
     );
 
-    const port = configService.get('PORT');
+    const port: string = configService.get('PORT');
     expect(port).toBeTruthy();
   });
 
   it(`should allow any key without a generic`, () => {
-    const configService = moduleRef.get<ConfigService>(ConfigService);
-    const port = configService.get('PORT');
+    const configService = moduleRef.get<ConfigService<{ PORT: string }>>(ConfigService);
+    const port: string = configService.get('PORT');
 
     expect(port).toBeTruthy();
   });

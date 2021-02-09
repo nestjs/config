@@ -47,7 +47,6 @@ describe('Schema validation', () => {
   });
 
   it(`should load env variables if everything is ok`, async () => {
-    let hasThrown = false;
     const module = await Test.createTestingModule({
       imports: [
         AppModule.withValidateFunction(validate, join(__dirname, '.env.valid')),
@@ -57,7 +56,7 @@ describe('Schema validation', () => {
     app = module.createNestApplication();
     await app.init();
 
-    const configService = app.get(ConfigService);
+    const configService: ConfigService<{ [key in 'PORT' | 'DATABASE_NAME']: unknown }> = app.get(ConfigService);
     expect(typeof configService.get('PORT')).not.toBe(undefined);
     expect(typeof configService.get('DATABASE_NAME')).not.toBe(undefined);
   });
@@ -81,7 +80,7 @@ describe('Schema validation', () => {
     app = module.createNestApplication();
     await app.init();
 
-    const configService = app.get(ConfigService);
+    const configService: ConfigService<{ PORT: unknown }> = app.get(ConfigService);
     expect(typeof configService.get('PORT')).toEqual('number');
   });
 });

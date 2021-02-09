@@ -45,7 +45,7 @@ describe('Schema validation', () => {
     app = module.createNestApplication();
     await app.init();
 
-    const configService = app.get(ConfigService);
+    const configService: ConfigService<{ PORT: unknown }> = app.get(ConfigService);
     expect(typeof configService.get('PORT')).toEqual('number');
   });
 });
