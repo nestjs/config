@@ -25,6 +25,17 @@ describe('Optional Generic()', () => {
     expect(port).toBeTruthy();
   });
 
+  it(`should infer type from a dot notation`, () => {
+    const configService = moduleRef.get<
+      ConfigService<{ obj: { test: boolean } }>
+    >(ConfigService);
+
+    const obj = configService.get('obj', { inferDotNotation: true });
+    const test = configService.get('obj.test', { inferDotNotation: true });
+    expect(obj?.test).toBeUndefined();
+    expect(test).toBeUndefined();
+  });
+
   it(`should allow any key without a generic`, () => {
     const configService = moduleRef.get<ConfigService>(ConfigService);
     const port = configService.get('PORT');

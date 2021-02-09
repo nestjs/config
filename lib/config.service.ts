@@ -1,22 +1,44 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
+import { isUndefined } from '@nestjs/common/utils/shared.utils';
 import get from 'lodash.get';
 import has from 'lodash.has';
 import set from 'lodash.set';
-import { isUndefined } from 'util';
 import {
   CONFIGURATION_TOKEN,
-  VALIDATED_ENV_PROPNAME,
+  VALIDATED_ENV_PROPNAME
 } from './config.constants';
 import { NoInferType } from './types';
 
+export type PathImpl<T, Key extends keyof T> =
+  Key extends string
+  ? T[Key] extends Record<string, any>
+    ? | `${Key}.${PathImpl<T[Key], Exclude<keyof T[Key], keyof any[]>> & string}`
+      | `${Key}.${Exclude<keyof T[Key], keyof any[]> & string}`
+    : never
+  : never;
+
+export type PathImpl2<T> = PathImpl<T, keyof T> | keyof T;
+export type Path<T> = PathImpl2<T> extends string | keyof T ? PathImpl2<T> : keyof T;
+
+export type PathValue<T, P extends Path<T>> =
+  P extends `${infer Key}.${infer Rest}`
+  ? Key extends keyof T
+    ? Rest extends Path<T[Key]>
+      ? PathValue<T[Key], Rest>
+      : never
+    : never
+  : P extends keyof T
+    ? T[P]
+    : never;
+
 @Injectable()
 export class ConfigService<K = Record<string, any>> {
-  get isCacheEnabled(): boolean {
-    return this._isCacheEnabled;
+  private set isCacheEnabled(value: boolean) {
+    this._isCacheEnabled = value;
   }
 
-  set isCacheEnabled(value: boolean) {
-    this._isCacheEnabled = value;
+  private get isCacheEnabled(): boolean {
+    return this._isCacheEnabled;
   }
 
   private readonly cache: Partial<K> = {} as any;
@@ -43,7 +65,7 @@ export class ConfigService<K = Record<string, any>> {
    * @param propertyPath
    * @param defaultValue
    */
-  get<T = any>(propertyPath: keyof K, defaultValue: NoInferType<T>): T;
+  get<T = K, P extends Path<T> = any, R = PathValue<T, P>>(propertyPath: P, options: { inferDotNotation: true }): R | undefined;
   /**
    * Get a configuration value (either custom configuration or process environment variable)
    * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
@@ -51,13 +73,24 @@ export class ConfigService<K = Record<string, any>> {
    * @param propertyPath
    * @param defaultValue
    */
-  get<T = any>(propertyPath: keyof K, defaultValue?: T): T | undefined {
+  get<T = any>(propertyPath: keyof K, defaultValue: NoInferType<T>): T;
+  /**
+   * Get a configuration value (either custom configuration or process environment variable)
+   * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
+   * It returns a default value if the key does not exist.
+   * @param propertyPath
+   * @param defaultValueOrOptions
+   */
+  get<T = any>(propertyPath: keyof K, defaultValueOrOptions?: T | { inferDotNotation: true }): T | undefined {
     const validatedEnvValue = this.getFromValidatedEnv(propertyPath);
     if (!isUndefined(validatedEnvValue)) {
       return validatedEnvValue;
     }
+    defaultValueOrOptions = (defaultValueOrOptions as { inferDotNotation: true })?.inferDotNotation 
+      ? undefined 
+      : defaultValueOrOptions;
 
-    const processEnvValue = this.getFromProcessEnv(propertyPath, defaultValue);
+    const processEnvValue = this.getFromProcessEnv(propertyPath, defaultValueOrOptions);
     if (!isUndefined(processEnvValue)) {
       return processEnvValue;
     }
@@ -67,7 +100,7 @@ export class ConfigService<K = Record<string, any>> {
       return internalValue;
     }
 
-    return defaultValue;
+    return defaultValueOrOptions as T;
   }
 
   private getFromCache<T = any>(
