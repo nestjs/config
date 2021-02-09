@@ -1,7 +1,7 @@
-type ConfigFactoryReturnValue =
-  | Record<string, any>
-  | Promise<Record<string, any>>;
+import { ConfigObject } from '../types';
+
+type ConfigFactoryReturnValue<T extends ConfigObject> = T | Promise<T>;
 
 export type ConfigFactory<
-  T extends ConfigFactoryReturnValue = ConfigFactoryReturnValue
-> = () => T;
+  T extends ConfigObject = ConfigObject
+> = () => ConfigFactoryReturnValue<T>;
