@@ -78,7 +78,7 @@ export class ConfigModule {
       provide: ConfigService,
       useFactory: (configService: ConfigService) => {
         if (options.cache) {
-          configService.isCacheEnabled = true;
+          (configService as any).isCacheEnabled = true;
         }
         return configService;
       },
