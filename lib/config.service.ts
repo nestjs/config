@@ -5,31 +5,18 @@ import has from 'lodash.has';
 import set from 'lodash.set';
 import {
   CONFIGURATION_TOKEN,
-  VALIDATED_ENV_PROPNAME
+  VALIDATED_ENV_PROPNAME,
 } from './config.constants';
-import { NoInferType } from './types';
+import { NoInferType, Path, PathValue } from './types';
 
-export type PathImpl<T, Key extends keyof T> =
-  Key extends string
-  ? T[Key] extends Record<string, any>
-    ? | `${Key}.${PathImpl<T[Key], Exclude<keyof T[Key], keyof any[]>> & string}`
-      | `${Key}.${Exclude<keyof T[Key], keyof any[]> & string}`
-    : never
-  : never;
-
-export type PathImpl2<T> = PathImpl<T, keyof T> | keyof T;
-export type Path<T> = PathImpl2<T> extends string | keyof T ? PathImpl2<T> : keyof T;
-
-export type PathValue<T, P extends Path<T>> =
-  P extends `${infer Key}.${infer Rest}`
-  ? Key extends keyof T
-    ? Rest extends Path<T[Key]>
-      ? PathValue<T[Key], Rest>
-      : never
-    : never
-  : P extends keyof T
-    ? T[P]
-    : never;
+export interface ConfigGetOptions {
+  /**
+   * If present, "get" method will try to automatically
+   * infer a type of property based on the type argument
+   * specified at the "ConfigService" class-level (example: ConfigService<Configuration>).
+   */
+  infer: true;
+}
 
 @Injectable()
 export class ConfigService<K = Record<string, any>> {
@@ -53,19 +40,19 @@ export class ConfigService<K = Record<string, any>> {
   /**
    * Get a configuration value (either custom configuration or process environment variable)
    * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
-   * It returns a default value if the key does not exist.
    * @param propertyPath
-   * @param defaultValue
    */
   get<T = any>(propertyPath: keyof K): T | undefined;
   /**
    * Get a configuration value (either custom configuration or process environment variable)
    * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
-   * It returns a default value if the key does not exist.
    * @param propertyPath
-   * @param defaultValue
+   * @param options
    */
-  get<T = K, P extends Path<T> = any, R = PathValue<T, P>>(propertyPath: P, options: { inferDotNotation: true }): R | undefined;
+  get<T = K, P extends Path<T> = any, R = PathValue<T, P>>(
+    propertyPath: P,
+    options: ConfigGetOptions,
+  ): R | undefined;
   /**
    * Get a configuration value (either custom configuration or process environment variable)
    * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
@@ -79,18 +66,36 @@ export class ConfigService<K = Record<string, any>> {
    * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
    * It returns a default value if the key does not exist.
    * @param propertyPath
+   * @param defaultValue
+   * @param options
+   */
+  get<T = K, P extends Path<T> = any, R = PathValue<T, P>>(
+    propertyPath: P,
+    defaultValue: NoInferType<R>,
+    options: ConfigGetOptions,
+  ): R | undefined;
+  /**
+   * Get a configuration value (either custom configuration or process environment variable)
+   * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
+   * It returns a default value if the key does not exist.
+   * @param propertyPath
    * @param defaultValueOrOptions
    */
-  get<T = any>(propertyPath: keyof K, defaultValueOrOptions?: T | { inferDotNotation: true }): T | undefined {
+  get<T = any>(
+    propertyPath: keyof K,
+    defaultValueOrOptions?: T | ConfigGetOptions,
+    options?: ConfigGetOptions,
+  ): T | undefined {
     const validatedEnvValue = this.getFromValidatedEnv(propertyPath);
     if (!isUndefined(validatedEnvValue)) {
       return validatedEnvValue;
     }
-    defaultValueOrOptions = (defaultValueOrOptions as { inferDotNotation: true })?.inferDotNotation 
-      ? undefined 
-      : defaultValueOrOptions;
+    const defaultValue =
+      this.isGetOptionsObject(defaultValueOrOptions) && !options
+        ? undefined
+        : defaultValueOrOptions;
 
-    const processEnvValue = this.getFromProcessEnv(propertyPath, defaultValueOrOptions);
+    const processEnvValue = this.getFromProcessEnv(propertyPath, defaultValue);
     if (!isUndefined(processEnvValue)) {
       return processEnvValue;
     }
@@ -100,7 +105,7 @@ export class ConfigService<K = Record<string, any>> {
       return internalValue;
     }
 
-    return defaultValueOrOptions as T;
+    return defaultValue as T;
   }
 
   private getFromCache<T = any>(
@@ -148,5 +153,11 @@ export class ConfigService<K = Record<string, any>> {
       return;
     }
     set(this.cache as Record<any, any>, propertyPath, value);
+  }
+
+  private isGetOptionsObject(
+    options: Record<string, any> | undefined,
+  ): options is ConfigGetOptions {
+    return options && options?.infer && Object.keys(options).length === 1;
   }
 }

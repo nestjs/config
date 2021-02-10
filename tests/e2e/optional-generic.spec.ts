@@ -20,7 +20,6 @@ describe('Optional Generic()', () => {
     const configService = moduleRef.get<ConfigService<{ PORT: string }>>(
       ConfigService,
     );
-
     const port = configService.get('PORT');
     expect(port).toBeTruthy();
   });
@@ -30,10 +29,14 @@ describe('Optional Generic()', () => {
       ConfigService<{ obj: { test: boolean } }>
     >(ConfigService);
 
-    const obj = configService.get('obj', { inferDotNotation: true });
-    const test = configService.get('obj.test', { inferDotNotation: true });
+    const obj = configService.get('obj', { infer: true });
+    const test = configService.get('obj.test', { infer: true });
+    const testWithDefaultValue = configService.get('obj.test', true, {
+      infer: true,
+    });
     expect(obj?.test).toBeUndefined();
     expect(test).toBeUndefined();
+    expect(testWithDefaultValue).toBeTruthy();
   });
 
   it(`should allow any key without a generic`, () => {
