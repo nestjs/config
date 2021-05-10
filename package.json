@@ -17,7 +17,7 @@
     "release": "release-it"
   },
   "dependencies": {
-    "dotenv": "8.2.0",
+    "dotenv": "9.0.2",
     "dotenv-expand": "5.1.0",
     "lodash.get": "4.4.2",
     "lodash.has": "4.5.2",
