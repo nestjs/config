@@ -1,22 +1,31 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
+import { isUndefined } from '@nestjs/common/utils/shared.utils';
 import get from 'lodash.get';
 import has from 'lodash.has';
 import set from 'lodash.set';
-import { isUndefined } from 'util';
 import {
   CONFIGURATION_TOKEN,
   VALIDATED_ENV_PROPNAME,
 } from './config.constants';
-import { NoInferType } from './types';
+import { NoInferType, Path, PathValue } from './types';
+
+export interface ConfigGetOptions {
+  /**
+   * If present, "get" method will try to automatically
+   * infer a type of property based on the type argument
+   * specified at the "ConfigService" class-level (example: ConfigService<Configuration>).
+   */
+  infer: true;
+}
 
 @Injectable()
 export class ConfigService<K = Record<string, any>> {
-  get isCacheEnabled(): boolean {
-    return this._isCacheEnabled;
+  private set isCacheEnabled(value: boolean) {
+    this._isCacheEnabled = value;
   }
 
-  set isCacheEnabled(value: boolean) {
-    this._isCacheEnabled = value;
+  private get isCacheEnabled(): boolean {
+    return this._isCacheEnabled;
   }
 
   private readonly cache: Partial<K> = {} as any;
@@ -31,11 +40,19 @@ export class ConfigService<K = Record<string, any>> {
   /**
    * Get a configuration value (either custom configuration or process environment variable)
    * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
-   * It returns a default value if the key does not exist.
    * @param propertyPath
-   * @param defaultValue
    */
   get<T = any>(propertyPath: keyof K): T | undefined;
+  /**
+   * Get a configuration value (either custom configuration or process environment variable)
+   * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
+   * @param propertyPath
+   * @param options
+   */
+  get<T = K, P extends Path<T> = any, R = PathValue<T, P>>(
+    propertyPath: P,
+    options: ConfigGetOptions,
+  ): R | undefined;
   /**
    * Get a configuration value (either custom configuration or process environment variable)
    * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
@@ -50,12 +67,33 @@ export class ConfigService<K = Record<string, any>> {
    * It returns a default value if the key does not exist.
    * @param propertyPath
    * @param defaultValue
+   * @param options
    */
-  get<T = any>(propertyPath: keyof K, defaultValue?: T): T | undefined {
+  get<T = K, P extends Path<T> = any, R = PathValue<T, P>>(
+    propertyPath: P,
+    defaultValue: NoInferType<R>,
+    options: ConfigGetOptions,
+  ): R | undefined;
+  /**
+   * Get a configuration value (either custom configuration or process environment variable)
+   * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
+   * It returns a default value if the key does not exist.
+   * @param propertyPath
+   * @param defaultValueOrOptions
+   */
+  get<T = any>(
+    propertyPath: keyof K,
+    defaultValueOrOptions?: T | ConfigGetOptions,
+    options?: ConfigGetOptions,
+  ): T | undefined {
     const validatedEnvValue = this.getFromValidatedEnv(propertyPath);
     if (!isUndefined(validatedEnvValue)) {
       return validatedEnvValue;
     }
+    const defaultValue =
+      this.isGetOptionsObject(defaultValueOrOptions) && !options
+        ? undefined
+        : defaultValueOrOptions;
 
     const processEnvValue = this.getFromProcessEnv(propertyPath, defaultValue);
     if (!isUndefined(processEnvValue)) {
@@ -67,7 +105,7 @@ export class ConfigService<K = Record<string, any>> {
       return internalValue;
     }
 
-    return defaultValue;
+    return defaultValue as T;
   }
 
   private getFromCache<T = any>(
@@ -115,5 +153,11 @@ export class ConfigService<K = Record<string, any>> {
       return;
     }
     set(this.cache as Record<any, any>, propertyPath, value);
+  }
+
+  private isGetOptionsObject(
+    options: Record<string, any> | undefined,
+  ): options is ConfigGetOptions {
+    return options && options?.infer && Object.keys(options).length === 1;
   }
 }

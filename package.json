@@ -7,6 +7,7 @@
   "url": "https://github.com/nestjs/config#readme",
   "scripts": {
     "build": "rimraf -rf dist && tsc -p tsconfig.json",
+    "format": "prettier --write \"{lib,test}/**/*.ts\"",
     "lint": "eslint 'lib/**/*.ts' --fix",
     "prepublish:npm": "npm run build",
     "publish:npm": "npm publish --access public",
@@ -27,17 +28,15 @@
   "devDependencies": {
     "@commitlint/cli": "12.1.4",
     "@commitlint/config-angular": "12.1.4",
-    "@hapi/joi": "17.1.1",
-    "@nestjs/common": "7.6.18",
-    "@nestjs/core": "7.6.18",
-    "@nestjs/platform-express": "7.6.18",
-    "@nestjs/testing": "7.6.18",
-    "@types/hapi__joi": "17.1.7",
+    "@nestjs/common": "8.0.0",
+    "@nestjs/core": "8.0.0",
+    "@nestjs/platform-express": "8.0.0",
+    "@nestjs/testing": "8.0.0",
     "@types/jest": "26.0.24",
     "@types/lodash.get": "4.4.6",
     "@types/lodash.has": "4.5.6",
     "@types/lodash.set": "4.3.6",
-    "@types/node": "14.17.4",
+    "@types/node": "16.0.0",
     "@types/uuid": "8.3.1",
     "@typescript-eslint/eslint-plugin": "4.28.2",
     "@typescript-eslint/parser": "4.28.2",
@@ -46,19 +45,20 @@
     "eslint-plugin-import": "2.23.4",
     "husky": "7.0.1",
     "jest": "27.0.6",
+    "joi": "17.4.0",
     "lint-staged": "11.0.0",
     "prettier": "2.3.2",
     "reflect-metadata": "0.1.13",
     "release-it": "14.10.0",
     "rimraf": "3.0.2",
-    "rxjs": "6.6.7",
+    "rxjs": "7.2.0",
     "ts-jest": "27.0.3",
     "typescript": "4.3.5"
   },
   "peerDependencies": {
-    "@nestjs/common": "^6.10.0 || ^7.0.0",
-    "reflect-metadata": "^0.1.12",
-    "rxjs": "^6.0.0"
+    "@nestjs/common": "^8.0.0",
+    "reflect-metadata": "^0.1.13",
+    "rxjs": "^7.2.0"
   },
   "lint-staged": {
     "*.ts": [
