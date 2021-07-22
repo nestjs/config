@@ -17,17 +17,15 @@ describe('Optional Generic()', () => {
   });
 
   it(`should allow a key of the interface`, () => {
-    const configService = moduleRef.get<ConfigService<{ PORT: string }>>(
-      ConfigService,
-    );
+    const configService =
+      moduleRef.get<ConfigService<{ PORT: string }>>(ConfigService);
     const port = configService.get('PORT');
     expect(port).toBeTruthy();
   });
 
   it(`should infer type from a dot notation`, () => {
-    const configService = moduleRef.get<
-      ConfigService<{ obj: { test: boolean } }>
-    >(ConfigService);
+    const configService =
+      moduleRef.get<ConfigService<{ obj: { test: boolean } }>>(ConfigService);
 
     const obj = configService.get('obj', { infer: true });
     const test = configService.get('obj.test', { infer: true });
@@ -44,6 +42,13 @@ describe('Optional Generic()', () => {
     const port = configService.get('PORT');
 
     expect(port).toBeTruthy();
+  });
+
+  it(`should allow any key without a generic and with the default value`, () => {
+    const configService = moduleRef.get<ConfigService>(ConfigService);
+    const port = configService.get('PORT2', 'default');
+
+    expect(port).toEqual('default');
   });
 
   afterEach(async () => {

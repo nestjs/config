@@ -19,7 +19,7 @@ export interface ConfigGetOptions {
 }
 
 @Injectable()
-export class ConfigService<K = Record<string, any>> {
+export class ConfigService<K = Record<string, unknown>> {
   private set isCacheEnabled(value: boolean) {
     this._isCacheEnabled = value;
   }
@@ -115,7 +115,7 @@ export class ConfigService<K = Record<string, any>> {
     const cachedValue = get(this.cache, propertyPath);
     return isUndefined(cachedValue)
       ? defaultValue
-      : ((cachedValue as unknown) as T);
+      : (cachedValue as unknown as T);
   }
 
   private getFromValidatedEnv<T = any>(propertyPath: keyof K): T | undefined {
@@ -123,7 +123,7 @@ export class ConfigService<K = Record<string, any>> {
       this.internalConfig[VALIDATED_ENV_PROPNAME],
       propertyPath,
     );
-    return (validatedEnvValue as unknown) as T;
+    return validatedEnvValue as unknown as T;
   }
 
   private getFromProcessEnv<T = any>(
@@ -140,7 +140,7 @@ export class ConfigService<K = Record<string, any>> {
     const processValue = get(process.env, propertyPath);
     this.setInCacheIfDefined(propertyPath, processValue);
 
-    return (processValue as unknown) as T;
+    return processValue as unknown as T;
   }
 
   private getFromInternalConfig<T = any>(propertyPath: keyof K): T | undefined {
