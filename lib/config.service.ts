@@ -73,7 +73,7 @@ export class ConfigService<K = Record<string, unknown>> {
     propertyPath: P,
     defaultValue: NoInferType<R>,
     options: ConfigGetOptions,
-  ): R | undefined;
+  ): R;
   /**
    * Get a configuration value (either custom configuration or process environment variable)
    * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
