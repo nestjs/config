@@ -7,7 +7,18 @@ import {
   CONFIGURATION_TOKEN,
   VALIDATED_ENV_PROPNAME,
 } from './config.constants';
-import { NoInferType, Path, PathValue, ExcludeUndefinedIf } from './types';
+import { NoInferType, Path, PathValue } from './types';
+
+/**
+ * `ExcludeUndefinedIf<ExcludeUndefined, T>
+ *
+ * If `ExcludeUndefined` is `true`, remove `undefined` from `T`.
+ * Otherwise, constructs the type `T` with `undefined`.
+ */
+type ExcludeUndefinedIf<
+  ExcludeUndefined extends boolean,
+  T,
+> = ExcludeUndefined extends true ? Exclude<T, undefined> : T | undefined;
 
 export interface ConfigGetOptions {
   /**
