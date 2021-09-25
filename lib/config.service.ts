@@ -9,6 +9,17 @@ import {
 } from './config.constants';
 import { NoInferType, Path, PathValue } from './types';
 
+/**
+ * `ExcludeUndefinedIf<ExcludeUndefined, T>
+ *
+ * If `ExcludeUndefined` is `true`, remove `undefined` from `T`.
+ * Otherwise, constructs the type `T` with `undefined`.
+ */
+type ExcludeUndefinedIf<
+  ExcludeUndefined extends boolean,
+  T,
+> = ExcludeUndefined extends true ? Exclude<T, undefined> : T | undefined;
+
 export interface ConfigGetOptions {
   /**
    * If present, "get" method will try to automatically
@@ -19,7 +30,10 @@ export interface ConfigGetOptions {
 }
 
 @Injectable()
-export class ConfigService<K = Record<string, unknown>> {
+export class ConfigService<
+  K = Record<string, unknown>,
+  WasValidated extends boolean = false,
+> {
   private set isCacheEnabled(value: boolean) {
     this._isCacheEnabled = value;
   }
@@ -42,7 +56,7 @@ export class ConfigService<K = Record<string, unknown>> {
    * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
    * @param propertyPath
    */
-  get<T = any>(propertyPath: keyof K): T | undefined;
+  get<T = any>(propertyPath: keyof K): ExcludeUndefinedIf<WasValidated, T>;
   /**
    * Get a configuration value (either custom configuration or process environment variable)
    * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
@@ -52,7 +66,7 @@ export class ConfigService<K = Record<string, unknown>> {
   get<T = K, P extends Path<T> = any, R = PathValue<T, P>>(
     propertyPath: P,
     options: ConfigGetOptions,
-  ): R | undefined;
+  ): ExcludeUndefinedIf<WasValidated, R>;
   /**
    * Get a configuration value (either custom configuration or process environment variable)
    * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
