@@ -7,14 +7,43 @@ import { ConfigService } from '../../lib/config.service';
 import databaseConfig from './database.config';
 import nestedDatabaseConfig from './nested-database.config';
 
+type Config = {
+  database: ConfigType<typeof databaseConfig> & {
+    driver: ConfigType<typeof nestedDatabaseConfig>
+  };
+};
+
 @Module({})
 export class AppModule {
   constructor(
     private readonly configService: ConfigService,
+    // The following is the same object as above but narrowing its types
+    private readonly configServiceNarrowed: ConfigService<Config, true>,
     @Optional()
     @Inject(databaseConfig.KEY)
     private readonly dbConfig: ConfigType<typeof databaseConfig>,
   ) {}
+
+  /**
+   * This method is not meant to be used anywhere! It just here for testing
+   * types defintions while runnig test suites (in some sort).
+   * If some typings doesn't follows the requirements, Jest will fail due to
+   * TypeScript errors.
+   */
+  private noop(): void {
+    // Arrange
+    const identityString = (v: string) => v;
+    const identityNumber = (v: number) => v;
+    // Act
+    const knowConfig = this.configServiceNarrowed.get<Config['database']>('database');
+    // Assert
+    // We don't need type assertions bellow anymore since `knowConfig` is not
+    // expected to be `undefined` beforehand.
+    identityString(knowConfig.host);
+    identityNumber(knowConfig.port);
+    identityString(knowConfig.driver.host);
+    identityNumber(knowConfig.driver.port);
+  }
 
   static withCache(): DynamicModule {
     return {
