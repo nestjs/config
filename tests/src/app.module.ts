@@ -1,5 +1,5 @@
-import Joi from 'joi';
 import { DynamicModule, Inject, Module, Optional } from '@nestjs/common';
+import Joi from 'joi';
 import { join } from 'path';
 import { ConfigType } from '../../lib';
 import { ConfigModule } from '../../lib/config.module';
