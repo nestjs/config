@@ -37,7 +37,7 @@
     "@types/lodash.has": "4.5.6",
     "@types/lodash.set": "4.3.6",
     "@types/node": "16.11.7",
-    "@types/uuid": "8.3.1",
+    "@types/uuid": "8.3.3",
     "@typescript-eslint/eslint-plugin": "5.4.0",
     "@typescript-eslint/parser": "5.4.0",
     "eslint": "8.2.0",
