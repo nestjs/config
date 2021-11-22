@@ -45,7 +45,7 @@ describe('Optional Generic()', () => {
   });
 
   it(`should allow any key without a generic and with the default value`, () => {
-    const configService = moduleRef.get<ConfigService>(ConfigService);
+    const configService = moduleRef.get(ConfigService);
     const port = configService.get('PORT2', 'default');
 
     expect(port).toEqual('default');
