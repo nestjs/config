@@ -31,7 +31,7 @@ export interface ConfigGetOptions {
 
 @Injectable()
 export class ConfigService<
-  K extends Record<string, unknown> = Record<string, unknown>,
+  K = Record<string, unknown>,
   WasValidated extends boolean = false,
 > {
   private set isCacheEnabled(value: boolean) {

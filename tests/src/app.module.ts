@@ -9,16 +9,25 @@ import nestedDatabaseConfig from './nested-database.config';
 
 type Config = {
   database: ConfigType<typeof databaseConfig> & {
-    driver: ConfigType<typeof nestedDatabaseConfig>
+    driver: ConfigType<typeof nestedDatabaseConfig>;
   };
 };
 
+interface ConfigTypeAsInterface {
+  database: ConfigType<typeof databaseConfig> & {
+    driver: ConfigType<typeof nestedDatabaseConfig>;
+  };
+}
 @Module({})
 export class AppModule {
   constructor(
     private readonly configService: ConfigService,
     // The following is the same object as above but narrowing its types
     private readonly configServiceNarrowed: ConfigService<Config, true>,
+    private readonly configServiceNarrowed2: ConfigService<
+      ConfigTypeAsInterface,
+      true
+    >,
     @Optional()
     @Inject(databaseConfig.KEY)
     private readonly dbConfig: ConfigType<typeof databaseConfig>,
@@ -35,7 +44,8 @@ export class AppModule {
     const identityString = (v: string) => v;
     const identityNumber = (v: number) => v;
     // Act
-    const knowConfig = this.configServiceNarrowed.get<Config['database']>('database');
+    const knowConfig =
+      this.configServiceNarrowed.get<Config['database']>('database');
     // Assert
     // We don't need type assertions bellow anymore since `knowConfig` is not
     // expected to be `undefined` beforehand.
