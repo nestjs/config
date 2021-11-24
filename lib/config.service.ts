@@ -29,6 +29,8 @@ export interface ConfigGetOptions {
   infer: true;
 }
 
+type KeyOf<T> = T extends unknown ? string : keyof T;
+
 @Injectable()
 export class ConfigService<
   K = Record<string, unknown>,
@@ -56,7 +58,7 @@ export class ConfigService<
    * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
    * @param propertyPath
    */
-  get<T = any>(propertyPath: keyof K): ExcludeUndefinedIf<WasValidated, T>;
+  get<T = any>(propertyPath: KeyOf<K>): ExcludeUndefinedIf<WasValidated, T>;
   /**
    * Get a configuration value (either custom configuration or process environment variable)
    * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
@@ -74,7 +76,7 @@ export class ConfigService<
    * @param propertyPath
    * @param defaultValue
    */
-  get<T = any>(propertyPath: keyof K, defaultValue: NoInferType<T>): T;
+  get<T = any>(propertyPath: KeyOf<K>, defaultValue: NoInferType<T>): T;
   /**
    * Get a configuration value (either custom configuration or process environment variable)
    * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
@@ -96,7 +98,7 @@ export class ConfigService<
    * @param defaultValueOrOptions
    */
   get<T = any>(
-    propertyPath: keyof K,
+    propertyPath: KeyOf<K>,
     defaultValueOrOptions?: T | ConfigGetOptions,
     options?: ConfigGetOptions,
   ): T | undefined {
@@ -123,7 +125,7 @@ export class ConfigService<
   }
 
   private getFromCache<T = any>(
-    propertyPath: keyof K,
+    propertyPath: KeyOf<K>,
     defaultValue?: T,
   ): T | undefined {
     const cachedValue = get(this.cache, propertyPath);
@@ -132,7 +134,7 @@ export class ConfigService<
       : (cachedValue as unknown as T);
   }
 
-  private getFromValidatedEnv<T = any>(propertyPath: keyof K): T | undefined {
+  private getFromValidatedEnv<T = any>(propertyPath: KeyOf<K>): T | undefined {
     const validatedEnvValue = get(
       this.internalConfig[VALIDATED_ENV_PROPNAME],
       propertyPath,
@@ -141,7 +143,7 @@ export class ConfigService<
   }
 
   private getFromProcessEnv<T = any>(
-    propertyPath: keyof K,
+    propertyPath: KeyOf<K>,
     defaultValue: any,
   ): T | undefined {
     if (
@@ -157,12 +159,14 @@ export class ConfigService<
     return processValue as unknown as T;
   }
 
-  private getFromInternalConfig<T = any>(propertyPath: keyof K): T | undefined {
+  private getFromInternalConfig<T = any>(
+    propertyPath: KeyOf<K>,
+  ): T | undefined {
     const internalValue = get(this.internalConfig, propertyPath);
     return internalValue;
   }
 
-  private setInCacheIfDefined(propertyPath: keyof K, value: any): void {
+  private setInCacheIfDefined(propertyPath: KeyOf<K>, value: any): void {
     if (typeof value === 'undefined') {
       return;
     }
