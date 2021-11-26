@@ -25,15 +25,17 @@ describe('Optional Generic()', () => {
 
   it(`should infer type from a dot notation`, () => {
     const configService =
-      moduleRef.get<ConfigService<{ obj: { test: boolean } }>>(ConfigService);
+      moduleRef.get<ConfigService<{ obj: { test: boolean; test2?: boolean } }>>(
+        ConfigService,
+      );
 
     const obj = configService.get('obj', { infer: true });
     const test = configService.get('obj.test', { infer: true });
-    const testWithDefaultValue = configService.get('obj.test', true, {
+    const testWithDefaultValue = configService.get('obj.test2', true, {
       infer: true,
     });
-    expect(obj?.test).toBeUndefined();
-    expect(test).toBeUndefined();
+    expect(obj?.test).toEqual('true');
+    expect(test).toEqual('true');
     expect(testWithDefaultValue).toBeTruthy();
   });
 

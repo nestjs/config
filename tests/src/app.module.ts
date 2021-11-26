@@ -74,6 +74,7 @@ export class AppModule {
       imports: [
         ConfigModule.forRoot({
           envFilePath: join(__dirname, '.env'),
+          load: [() => ({ obj: { test: 'true', test2: undefined } })],
         }),
       ],
     };

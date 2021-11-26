@@ -29,7 +29,7 @@ export interface ConfigGetOptions {
   infer: true;
 }
 
-type KeyOf<T> = T extends unknown ? string : keyof T;
+type KeyOf<T> = keyof T extends never ? string : keyof T;
 
 @Injectable()
 export class ConfigService<
