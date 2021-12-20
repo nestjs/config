@@ -52,10 +52,8 @@ export class ConfigModule {
       this.assignVariablesToProcess(validatedConfig);
     } else if (options.validationSchema) {
       const validationOptions = this.getSchemaValidationOptions(options);
-      const {
-        error,
-        value: validatedConfig,
-      } = options.validationSchema.validate(config, validationOptions);
+      const { error, value: validatedConfig } =
+        options.validationSchema.validate(config, validationOptions);
 
       if (error) {
         throw new Error(`Config validation error: ${error.message}`);
