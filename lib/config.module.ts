@@ -1,10 +1,10 @@
 import { DynamicModule, Module } from '@nestjs/common';
 import { FactoryProvider } from '@nestjs/common/interfaces';
+import { isObject } from '@nestjs/common/utils/shared.utils';
 import * as dotenv from 'dotenv';
 import dotenvExpand from 'dotenv-expand';
 import * as fs from 'fs';
 import { resolve } from 'path';
-import { isObject } from 'util';
 import { ConfigHostModule } from './config-host.module';
 import {
   CONFIGURATION_LOADER,
@@ -31,6 +31,20 @@ import { mergeConfigObject } from './utils/merge-configs.util';
   exports: [ConfigHostModule, ConfigService],
 })
 export class ConfigModule {
+  /**
+   * This promise resolves when "dotenv" completes loading environment variables.
+   * When "ignoreEnvFile" is set to true, then it will resolve immediately after the
+   * "ConfigModule#forRoot" method is called.
+   */
+  public static get envVariablesLoaded() {
+    return this._envVariablesLoaded;
+  }
+
+  private static environmentVariablesLoadedSignal: () => void;
+  private static readonly _envVariablesLoaded = new Promise<void>(
+    resolve => (ConfigModule.environmentVariablesLoadedSignal = resolve),
+  );
+
   /**
    * Loads process environment variables depending on the "ignoreEnvFile" flag and "envFilePath" value.
    * Also, registers custom configurations globally.
@@ -94,6 +108,8 @@ export class ConfigModule {
       };
       providers.push(validatedEnvConfigLoader);
     }
+
+    this.environmentVariablesLoadedSignal();
 
     return {
       module: ConfigModule,
@@ -180,7 +196,9 @@ export class ConfigModule {
       return;
     }
     const keys = Object.keys(config).filter(key => !(key in process.env));
-    keys.forEach(key => (process.env[key] = config[key]));
+    keys.forEach(
+      key => (process.env[key] = (config as Record<string, any>)[key]),
+    );
   }
 
   private static mergePartial(

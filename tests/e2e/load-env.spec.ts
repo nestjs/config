@@ -1,5 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
+import { ConfigModule } from '../../lib';
 import { AppModule } from '../src/app.module';
 
 describe('Environment variables', () => {
@@ -14,7 +15,9 @@ describe('Environment variables', () => {
     await app.init();
   });
 
-  it(`should return loaded env variables`, () => {
+  it(`should return loaded env variables`, async () => {
+    await ConfigModule.envVariablesLoaded;
+
     const envVars = app.get(AppModule).getEnvVariables();
     expect(envVars.PORT).toEqual('4000');
   });
