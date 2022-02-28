@@ -42,8 +42,17 @@ export class ConfigService<
     return this._isCacheEnabled;
   }
 
+  private set ignoreEnvVars(value: boolean) {
+    this._ignoreEnvVars = value;
+  }
+
+  private get ignoreEnvVars(): boolean {
+    return this._ignoreEnvVars;
+  }
+
   private readonly cache: Partial<K> = {} as any;
   private _isCacheEnabled = false;
+  private _ignoreEnvVars = false;
 
   constructor(
     @Optional()
@@ -110,13 +119,17 @@ export class ConfigService<
         : defaultValueOrOptions;
 
     const processEnvValue = this.getFromProcessEnv(propertyPath, defaultValue);
-    if (!isUndefined(processEnvValue)) {
-      return processEnvValue;
+    const internalValue = this.getFromInternalConfig(propertyPath);
+
+    const firstPriority = this.ignoreEnvVars ? internalValue : processEnvValue;
+    const secondPriority = this.ignoreEnvVars ? processEnvValue : internalValue;
+
+    if (!isUndefined(firstPriority)) {
+      return firstPriority;
     }
 
-    const internalValue = this.getFromInternalConfig(propertyPath);
-    if (!isUndefined(internalValue)) {
-      return internalValue;
+    if (!isUndefined(secondPriority)) {
+      return secondPriority;
     }
 
     return defaultValue as T;

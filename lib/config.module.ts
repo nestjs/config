@@ -92,6 +92,11 @@ export class ConfigModule {
         if (options.cache) {
           (configService as any).isCacheEnabled = true;
         }
+
+        if (options.ignoreEnvVars) {
+          (configService as any).ignoreEnvVars = true;
+        }
+
         return configService;
       },
       inject: [CONFIGURATION_SERVICE_TOKEN, ...configProviderTokens],

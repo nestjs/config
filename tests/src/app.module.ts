@@ -171,6 +171,19 @@ export class AppModule {
     };
   }
 
+  static withIgnoredEnvVars(): DynamicModule {
+    return {
+      module: AppModule,
+      imports: [
+        ConfigModule.forRoot({
+          envFilePath: join(__dirname, '.env'),
+          ignoreEnvVars: true,
+          load: [() => ({ PORT: 4040 })],
+        }),
+      ],
+    };
+  }
+
   getEnvVariables() {
     return process.env;
   }
