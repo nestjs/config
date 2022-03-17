@@ -92,6 +92,18 @@ export class AppModule {
     };
   }
 
+  static withExpandedEnvVarsIgnoreProcessEnv(): DynamicModule {
+    return {
+      module: AppModule,
+      imports: [
+        ConfigModule.forRoot({
+          envFilePath: join(__dirname, '.env.expanded'),
+          expandVariables: { ignoreProcessEnv: true }
+        }),
+      ],
+    };
+  }
+
   static withMultipleEnvFiles(): DynamicModule {
     return {
       module: AppModule,
