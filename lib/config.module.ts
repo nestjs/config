@@ -2,7 +2,7 @@ import { DynamicModule, Module } from '@nestjs/common';
 import { FactoryProvider } from '@nestjs/common/interfaces';
 import { isObject } from '@nestjs/common/utils/shared.utils';
 import * as dotenv from 'dotenv';
-import { expand } from 'dotenv-expand';
+import { DotenvExpandOptions, expand } from 'dotenv-expand';
 import * as fs from 'fs';
 import { resolve } from 'path';
 import { ConfigHostModule } from './config-host.module';
@@ -184,7 +184,8 @@ export class ConfigModule {
           config,
         );
         if (options.expandVariables) {
-          config = expand({ parsed: config }).parsed || config;
+          const expandOptions: DotenvExpandOptions = typeof options.expandVariables === 'object' ? options.expandVariables : {};
+          config = expand({ ...expandOptions, parsed: config }).parsed || config;
         }
       }
     }
