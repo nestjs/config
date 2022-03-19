@@ -23,6 +23,7 @@ describe('Files', () => {
     const config = app.get(AppModule).getDatabaseConfig();
     expect(config.host).toEqual('host');
     expect(config.port).toEqual(4000);
+    expect(config.timeout).toEqual(5000);
   });
 
   afterEach(async () => {

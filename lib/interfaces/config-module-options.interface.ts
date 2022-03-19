@@ -1,7 +1,16 @@
 import { ConfigFactory } from './config-factory.interface';
-import { DotenvExpandOptions } from 'dotenv-expand'
+import { DotenvExpandOptions } from 'dotenv-expand';
+import { ModuleMetadata } from '@nestjs/common';
+import { ConfigObject } from '../types';
+import { FactoryProvider } from '@nestjs/common/interfaces';
+import { ConfigService } from '../config.service';
 
-export interface ConfigModuleOptions {
+export interface AsyncEnvProvider
+  extends Pick<FactoryProvider, 'provide' | 'inject'> {
+  useFactory: (configService: ConfigService, ...args: any[]) => ConfigObject;
+}
+
+export interface ConfigModuleOptions extends Pick<ModuleMetadata, 'imports'> {
   /**
    * If "true", values from the process.env object will be cached in the memory.
    * This improves the overall application performance.
@@ -60,6 +69,11 @@ export interface ConfigModuleOptions {
    * See: https://docs.nestjs.com/techniques/configuration
    */
   load?: Array<ConfigFactory>;
+
+  /**
+   * Array of custom async env providers to be loaded.
+   */
+  asyncEnvProviders?: Array<AsyncEnvProvider>;
 
   /**
    * A boolean value indicating the use of expanded variables, or object

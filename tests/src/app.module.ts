@@ -1,11 +1,11 @@
 import { DynamicModule, Inject, Module, Optional } from '@nestjs/common';
 import Joi from 'joi';
 import { join } from 'path';
-import { ConfigType } from '../../lib';
-import { ConfigModule } from '../../lib/config.module';
-import { ConfigService } from '../../lib/config.service';
+import { ConfigType, ConfigModule, ConfigService } from '../../lib';
 import databaseConfig from './database.config';
 import nestedDatabaseConfig from './nested-database.config';
+import { SubjectModule } from './subject.module';
+import { Subject } from './subject';
 
 type Config = {
   database: ConfigType<typeof databaseConfig> & {
@@ -115,11 +115,40 @@ export class AppModule {
     };
   }
 
+  static withAsyncLoadedConfigurations(): DynamicModule {
+    return {
+      module: AppModule,
+      imports: [
+        ConfigModule.forRoot({
+          envFilePath: join(__dirname, '.env'),
+          load: [
+            (configService => ({
+              subjectModified: `${configService.get('subject')}Modified`,
+            }))
+          ],
+          imports: [SubjectModule],
+          asyncEnvProviders: [
+            {
+              inject: [Subject],
+              provide: Symbol('SubjectLoader'),
+              useFactory: async (configService: ConfigService, subject: Subject) => {
+                return {
+                  subject: subject.get() + configService.get('TIMEOUT'),
+                }
+              }
+            }
+          ]
+        }),
+      ],
+    };
+  }
+
   static withLoadedConfigurations(): DynamicModule {
     return {
       module: AppModule,
       imports: [
         ConfigModule.forRoot({
+          envFilePath: join(__dirname, '.env'),
           load: [databaseConfig],
         }),
       ],

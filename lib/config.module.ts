@@ -7,6 +7,7 @@ import * as fs from 'fs';
 import { resolve } from 'path';
 import { ConfigHostModule } from './config-host.module';
 import {
+  ASYNC_CONFIGURATION_LOADER,
   CONFIGURATION_LOADER,
   CONFIGURATION_SERVICE_TOKEN,
   CONFIGURATION_TOKEN,
@@ -14,7 +15,11 @@ import {
   VALIDATED_ENV_PROPNAME,
 } from './config.constants';
 import { ConfigService } from './config.service';
-import { ConfigFactory, ConfigModuleOptions } from './interfaces';
+import {
+  AsyncEnvProvider,
+  ConfigFactory,
+  ConfigModuleOptions,
+} from './interfaces';
 import { ConfigFactoryKeyHost } from './utils';
 import { createConfigProvider } from './utils/create-config-factory.util';
 import { getRegistrationToken } from './utils/get-registration-token.util';
@@ -78,14 +83,26 @@ export class ConfigModule {
       this.assignVariablesToProcess(config);
     }
 
-    const isConfigToLoad = options.load && options.load.length;
+    const envProviders = (options.asyncEnvProviders || [])
+      .map(
+        (provider): AsyncEnvProvider => ({
+          ...provider,
+          inject: [CONFIGURATION_SERVICE_TOKEN, ...(provider.inject || [])],
+        }),
+      )
+      .filter(item => item) as FactoryProvider[];
+    const configEnvProviderTokens = envProviders.map(item => item.provide);
+
     const providers = (options.load || [])
       .map(factory =>
         createConfigProvider(factory as ConfigFactory & ConfigFactoryKeyHost),
       )
       .filter(item => item) as FactoryProvider[];
-
     const configProviderTokens = providers.map(item => item.provide);
+
+    providers.push(...envProviders);
+    const isConfigToLoad = providers.length;
+
     const configServiceProvider = {
       provide: ConfigService,
       useFactory: (configService: ConfigService) => {
@@ -94,7 +111,11 @@ export class ConfigModule {
         }
         return configService;
       },
-      inject: [CONFIGURATION_SERVICE_TOKEN, ...configProviderTokens],
+      inject: [
+        CONFIGURATION_SERVICE_TOKEN,
+        ...configProviderTokens,
+        ...configEnvProviderTokens,
+      ],
     };
     providers.push(configServiceProvider);
 
@@ -118,8 +139,21 @@ export class ConfigModule {
         ? [
             ...providers,
             {
+              provide: ASYNC_CONFIGURATION_LOADER,
+              useFactory: (
+                host: Record<string, any>,
+                ...configurations: Record<string, any>[]
+              ) => {
+                configurations.forEach((item, index) =>
+                  this.mergePartial(host, item, envProviders[index]),
+                );
+              },
+              inject: [CONFIGURATION_TOKEN, ...configEnvProviderTokens],
+            },
+            {
               provide: CONFIGURATION_LOADER,
               useFactory: (
+                _: never,
                 host: Record<string, any>,
                 ...configurations: Record<string, any>[]
               ) => {
@@ -127,11 +161,20 @@ export class ConfigModule {
                   this.mergePartial(host, item, providers[index]),
                 );
               },
-              inject: [CONFIGURATION_TOKEN, ...configProviderTokens],
+              inject: [
+                ASYNC_CONFIGURATION_LOADER,
+                CONFIGURATION_TOKEN,
+                ...configProviderTokens,
+              ],
             },
           ]
         : providers,
-      exports: [ConfigService, ...configProviderTokens],
+      exports: [
+        ConfigService,
+        ...configProviderTokens,
+        ...configEnvProviderTokens,
+      ],
+      imports: options.imports,
     };
   }
 
@@ -142,6 +185,7 @@ export class ConfigModule {
   static forFeature(config: ConfigFactory): DynamicModule {
     const configProvider = createConfigProvider(
       config as ConfigFactory & ConfigFactoryKeyHost,
+      true,
     );
     const serviceProvider = {
       provide: ConfigService,
@@ -184,8 +228,12 @@ export class ConfigModule {
           config,
         );
         if (options.expandVariables) {
-          const expandOptions: DotenvExpandOptions = typeof options.expandVariables === 'object' ? options.expandVariables : {};
-          config = expand({ ...expandOptions, parsed: config }).parsed || config;
+          const expandOptions: DotenvExpandOptions =
+            typeof options.expandVariables === 'object'
+              ? options.expandVariables
+              : {};
+          config =
+            expand({ ...expandOptions, parsed: config }).parsed || config;
         }
       }
     }
