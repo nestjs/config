@@ -1,5 +1,17 @@
+/**
+ * Evaluates to `true` if `T` is `any`. `false` otherwise.
+ * (c) https://stackoverflow.com/a/68633327/5290447
+ */
+type IsAny<T> = unknown extends T
+  ? [keyof T] extends [never]
+    ? false
+    : true
+  : false;
+
 export type PathImpl<T, Key extends keyof T> = Key extends string
-  ? T[Key] extends Record<string, any>
+  ? IsAny<T[Key]> extends true
+    ? never
+    : T[Key] extends Record<string, any>
     ?
         | `${Key}.${PathImpl<T[Key], Exclude<keyof T[Key], keyof any[]>> &
             string}`
