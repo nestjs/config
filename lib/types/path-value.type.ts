@@ -22,8 +22,10 @@ export type PathImpl<T, Key extends keyof T> = Key extends string
 export type PathImpl2<T> = PathImpl<T, keyof T> | keyof T;
 
 export type Path<T> = keyof T extends string
-  ? PathImpl2<T> extends string | keyof T
-    ? PathImpl2<T>
+  ? PathImpl2<T> extends infer P
+    ? P extends string | keyof T
+      ? P
+      : keyof T
     : keyof T
   : never;
 
