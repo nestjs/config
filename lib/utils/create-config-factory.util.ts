@@ -7,9 +7,8 @@ import { ConfigFactoryKeyHost } from './register-as.util';
 export function createConfigProvider(
   factory: ConfigFactory & ConfigFactoryKeyHost,
 ): FactoryProvider {
-  const uniqId = uuid();
   return {
-    provide: factory.KEY || getConfigToken(uniqId),
+    provide: factory.KEY || getConfigToken(uuid()),
     useFactory: factory,
     inject: [],
   };
