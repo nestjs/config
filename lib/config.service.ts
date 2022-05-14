@@ -146,7 +146,10 @@ export class ConfigService<
    * @param propertyPath
    * @param defaultValue
    */
-  getOrThrow<T = any>(propertyPath: KeyOf<K>, defaultValue: NoInferType<T>): T;
+  getOrThrow<T = any>(
+    propertyPath: KeyOf<K>,
+    defaultValue: NoInferType<T>,
+  ): Exclude<T, undefined>;
   /**
    * Get a configuration value (either custom configuration or process environment variable)
    * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
@@ -160,7 +163,7 @@ export class ConfigService<
     propertyPath: P,
     defaultValue: NoInferType<R>,
     options: ConfigGetOptions,
-  ): R;
+  ): Exclude<R, undefined>;
   /**
    * Get a configuration value (either custom configuration or process environment variable)
    * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
@@ -173,17 +176,17 @@ export class ConfigService<
     propertyPath: KeyOf<K>,
     defaultValueOrOptions?: T | ConfigGetOptions,
     options?: ConfigGetOptions,
-  ): T {
+  ): Exclude<T, undefined> {
     // @ts-expect-error Bypass method overloads
-    const value = this.get(propertyPath, defaultValueOrOptions, options) as T | undefined;
+    const value = this.get(propertyPath, defaultValueOrOptions, options) as
+      | T
+      | undefined;
 
     if (isUndefined(value)) {
-      throw new TypeError(
-        `Configuration key "${propertyPath}" does not exist`,
-      );
+      throw new TypeError(`Configuration key "${propertyPath}" does not exist`);
     }
 
-    return value;
+    return value as Exclude<T, undefined>;
   }
 
   private getFromCache<T = any>(
