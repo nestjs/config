@@ -142,7 +142,7 @@ export class ConfigService<
    * Get a configuration value (either custom configuration or process environment variable)
    * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
    * It returns a default value if the key does not exist.
-   * If no default value was provided an exception will be thrown.
+   * If the default value is undefined an exception will be thrown.
    * @param propertyPath
    * @param defaultValue
    */
@@ -154,7 +154,7 @@ export class ConfigService<
    * Get a configuration value (either custom configuration or process environment variable)
    * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
    * It returns a default value if the key does not exist.
-   * If no default value was provided an exception will be thrown.
+   * If the default value is undefined an exception will be thrown.
    * @param propertyPath
    * @param defaultValue
    * @param options
@@ -168,7 +168,7 @@ export class ConfigService<
    * Get a configuration value (either custom configuration or process environment variable)
    * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
    * It returns a default value if the key does not exist.
-   * If no default value was provided an exception will be thrown.
+   * If the default value is undefined an exception will be thrown.
    * @param propertyPath
    * @param defaultValueOrOptions
    */
