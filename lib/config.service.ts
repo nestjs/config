@@ -134,7 +134,7 @@ export class ConfigService<
    * @param propertyPath
    * @param options
    */
-  getOrThrow<T = K, P extends Path<T> = any, R = PathValue<T, P>>(
+  getOrThrow<T = K, P extends Path<T> = any>(
     propertyPath: P,
     options: ConfigGetOptions,
   ): Exclude<T, undefined>;
@@ -183,7 +183,7 @@ export class ConfigService<
       | undefined;
 
     if (isUndefined(value)) {
-      throw new TypeError(`Configuration key "${propertyPath}" does not exist`);
+      throw new TypeError(`Configuration key "${propertyPath.toString()}" does not exist`);
     }
 
     return value as Exclude<T, undefined>;
