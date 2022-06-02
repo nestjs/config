@@ -122,6 +122,73 @@ export class ConfigService<
     return defaultValue as T;
   }
 
+  /**
+   * Get a configuration value (either custom configuration or process environment variable)
+   * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
+   * @param propertyPath
+   */
+  getOrThrow<T = any>(propertyPath: KeyOf<K>): Exclude<T, undefined>;
+  /**
+   * Get a configuration value (either custom configuration or process environment variable)
+   * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
+   * @param propertyPath
+   * @param options
+   */
+  getOrThrow<T = K, P extends Path<T> = any>(
+    propertyPath: P,
+    options: ConfigGetOptions,
+  ): Exclude<T, undefined>;
+  /**
+   * Get a configuration value (either custom configuration or process environment variable)
+   * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
+   * It returns a default value if the key does not exist.
+   * If the default value is undefined an exception will be thrown.
+   * @param propertyPath
+   * @param defaultValue
+   */
+  getOrThrow<T = any>(
+    propertyPath: KeyOf<K>,
+    defaultValue: NoInferType<T>,
+  ): Exclude<T, undefined>;
+  /**
+   * Get a configuration value (either custom configuration or process environment variable)
+   * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
+   * It returns a default value if the key does not exist.
+   * If the default value is undefined an exception will be thrown.
+   * @param propertyPath
+   * @param defaultValue
+   * @param options
+   */
+  getOrThrow<T = K, P extends Path<T> = any, R = PathValue<T, P>>(
+    propertyPath: P,
+    defaultValue: NoInferType<R>,
+    options: ConfigGetOptions,
+  ): Exclude<R, undefined>;
+  /**
+   * Get a configuration value (either custom configuration or process environment variable)
+   * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
+   * It returns a default value if the key does not exist.
+   * If the default value is undefined an exception will be thrown.
+   * @param propertyPath
+   * @param defaultValueOrOptions
+   */
+  getOrThrow<T = any>(
+    propertyPath: KeyOf<K>,
+    defaultValueOrOptions?: T | ConfigGetOptions,
+    options?: ConfigGetOptions,
+  ): Exclude<T, undefined> {
+    // @ts-expect-error Bypass method overloads
+    const value = this.get(propertyPath, defaultValueOrOptions, options) as
+      | T
+      | undefined;
+
+    if (isUndefined(value)) {
+      throw new TypeError(`Configuration key "${propertyPath.toString()}" does not exist`);
+    }
+
+    return value as Exclude<T, undefined>;
+  }
+
   private getFromCache<T = any>(
     propertyPath: KeyOf<K>,
     defaultValue?: T,
