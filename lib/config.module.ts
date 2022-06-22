@@ -54,11 +54,10 @@ export class ConfigModule {
     let validatedEnvConfig: Record<string, any> | undefined = undefined;
     let config = options.ignoreEnvFile ? {} : this.loadEnvFile(options);
 
-    if (!options.ignoreEnvVars) {
-      config = {
-        ...config,
-        ...process.env,
-      };
+    if (options.expandVariables || !options.ignoreEnvVars) {
+      const expandOptions: DotenvExpandOptions = typeof options.expandVariables === 'object' ? options.expandVariables : {};
+      config = expand({ ...expandOptions, parsed: {...config,...(!expandOptions.ignoreProcessEnv && !options.ignoreEnvVars && process.env )} }).parsed || config;
+ 
     }
     if (options.validate) {
       const validatedConfig = options.validate(config);
@@ -183,10 +182,7 @@ export class ConfigModule {
           dotenv.parse(fs.readFileSync(envFilePath)),
           config,
         );
-        if (options.expandVariables) {
-          const expandOptions: DotenvExpandOptions = typeof options.expandVariables === 'object' ? options.expandVariables : {};
-          config = expand({ ...expandOptions, parsed: config }).parsed || config;
-        }
+  
       }
     }
     return config;
