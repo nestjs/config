@@ -98,7 +98,7 @@ export class ConfigService<
     options: ConfigGetOptions,
   ): R;
   /**
-   * Get a configuration value (either custom configuration or process environment variable)
+   * Get a configuration value (either custom configuration or process environment variable if not disabled using "ignoreEnvVarsOnGet")
    * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
    * It returns a default value if the key does not exist.
    * @param propertyPath
