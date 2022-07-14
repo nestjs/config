@@ -92,6 +92,7 @@ export class ConfigModule {
         if (options.cache) {
           (configService as any).isCacheEnabled = true;
         }
+        (configService as any).ignoreEnvVarsOnGet = !!options.ignoreEnvVarsOnGet;
         return configService;
       },
       inject: [CONFIGURATION_SERVICE_TOKEN, ...configProviderTokens],

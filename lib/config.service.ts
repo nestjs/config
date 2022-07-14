@@ -16,7 +16,7 @@ import { NoInferType, Path, PathValue } from './types';
 type ExcludeUndefinedIf<
   ExcludeUndefined extends boolean,
   T,
-> = ExcludeUndefined extends true ? Exclude<T, undefined> : T | undefined;
+  > = ExcludeUndefined extends true ? Exclude<T, undefined> : T | undefined;
 
 export interface ConfigGetOptions {
   /**
@@ -33,7 +33,7 @@ type KeyOf<T> = keyof T extends never ? string : keyof T;
 export class ConfigService<
   K = Record<string, unknown>,
   WasValidated extends boolean = false,
-> {
+  > {
   private set isCacheEnabled(value: boolean) {
     this._isCacheEnabled = value;
   }
@@ -42,8 +42,17 @@ export class ConfigService<
     return this._isCacheEnabled;
   }
 
+  private set ignoreEnvVarsOnGet(value: boolean) {
+    this._ignoreEnvVarsOnGet = value;
+  }
+
+  private get ignoreEnvVarsOnGet(): boolean {
+    return this._ignoreEnvVarsOnGet;
+  }
+
   private readonly cache: Partial<K> = {} as any;
   private _isCacheEnabled = false;
+  private _ignoreEnvVarsOnGet = false;
 
   constructor(
     @Optional()
@@ -109,9 +118,11 @@ export class ConfigService<
         ? undefined
         : defaultValueOrOptions;
 
-    const processEnvValue = this.getFromProcessEnv(propertyPath, defaultValue);
-    if (!isUndefined(processEnvValue)) {
-      return processEnvValue;
+    if (!this.ignoreEnvVarsOnGet) {
+      const processEnvValue = this.getFromProcessEnv(propertyPath, defaultValue);
+      if (!isUndefined(processEnvValue)) {
+        return processEnvValue;
+      }
     }
 
     const internalValue = this.getFromInternalConfig(propertyPath);

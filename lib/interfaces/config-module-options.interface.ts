@@ -24,6 +24,11 @@ export interface ConfigModuleOptions {
    * If "true", predefined environment variables will not be validated.
    */
   ignoreEnvVars?: boolean;
+  
+  /**
+   * If "true", environment variables will not be considered on get.
+   */
+   ignoreEnvVarsOnGet?: boolean;
 
   /**
    * Path to the environment file(s) to be loaded.
