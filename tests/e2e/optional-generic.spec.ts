@@ -39,6 +39,22 @@ describe('Optional Generic()', () => {
     expect(testWithDefaultValue).toBeTruthy();
   });
 
+  it(`should infer type from a dot notation (getOrThrow)`, () => {
+    const configService =
+      moduleRef.get<ConfigService<{ obj: { test: boolean; test2?: boolean } }>>(
+        ConfigService,
+      );
+
+    const obj = configService.getOrThrow('obj', { infer: true });
+    const test = configService.getOrThrow('obj.test', { infer: true });
+    const testWithDefaultValue = configService.getOrThrow('obj.test2', true, {
+      infer: true,
+    });
+    expect(obj?.test).toEqual('true');
+    expect(test).toEqual('true');
+    expect(testWithDefaultValue).toBeTruthy();
+  });
+
   it(`should allow any key without a generic`, () => {
     const configService = moduleRef.get<ConfigService>(ConfigService);
     const port = configService.get('PORT');

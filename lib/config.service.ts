@@ -134,10 +134,10 @@ export class ConfigService<
    * @param propertyPath
    * @param options
    */
-  getOrThrow<T = K, P extends Path<T> = any>(
+  getOrThrow<T = K, P extends Path<T> = any, R = PathValue<T, P>>(
     propertyPath: P,
     options: ConfigGetOptions,
-  ): Exclude<T, undefined>;
+  ): Exclude<R, undefined>;
   /**
    * Get a configuration value (either custom configuration or process environment variable)
    * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
