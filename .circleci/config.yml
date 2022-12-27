@@ -39,7 +39,7 @@ jobs:
   integration_tests:
     working_directory: ~/nest
     docker:
-      - image: cimg/node:17.9
+      - image: cimg/node:19.3
     steps:
       - checkout
       - *restore-cache
