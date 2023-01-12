@@ -251,16 +251,14 @@ export class ConfigService<
           propertyPath,
       );
       if (!isUndefined(validatedEnvValue)) {
-        return set(this.internalConfig[VALIDATED_ENV_PROPNAME], propertyPath.toString(), newValue)
+        set(this.internalConfig[VALIDATED_ENV_PROPNAME], propertyPath.toString(), newValue)
       }
-      console.log(!isUndefined(get(process.env, propertyPath)))
       if (!isUndefined(get(process.env, propertyPath))) {
-        console.log("here we go")
-        return set(process.env, propertyPath.toString(), newValue)
+        set(process.env, propertyPath.toString(), newValue)
       }
 
       if (!isUndefined(get(this.internalConfig, propertyPath.toString()))) {
-        return set(this.internalConfig, propertyPath.toString(), newValue)
+        set(this.internalConfig, propertyPath.toString(), newValue)
       }
     }
   }
