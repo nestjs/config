@@ -244,6 +244,13 @@ export class ConfigService<
     return options && options?.infer && Object.keys(options).length === 1;
   }
 
+  /**
+   * Update a configuration value in all possible cases(either custom configuration or process environment variable)
+   * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
+   * If the cache is enabled will not change anything.
+   * @param propertyPath
+   * @param newValue
+   */
   set(propertyPath: KeyOf<K>, newValue: string) {
     if(!this.isCacheEnabled) {
       const validatedEnvValue = get(
