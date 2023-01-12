@@ -243,4 +243,26 @@ export class ConfigService<
   ): options is ConfigGetOptions {
     return options && options?.infer && Object.keys(options).length === 1;
   }
+
+  set(propertyPath: KeyOf<K>, newValue: string) {
+    if(!this.isCacheEnabled) {
+      const validatedEnvValue = get(
+          this.internalConfig[VALIDATED_ENV_PROPNAME],
+          propertyPath,
+      );
+      if (!isUndefined(validatedEnvValue)) {
+        return set(this.internalConfig[VALIDATED_ENV_PROPNAME], propertyPath.toString(), newValue)
+      }
+      console.log(!isUndefined(get(process.env, propertyPath)))
+      if (!isUndefined(get(process.env, propertyPath))) {
+        console.log("here we go")
+        return set(process.env, propertyPath.toString(), newValue)
+      }
+
+      if (!isUndefined(get(this.internalConfig, propertyPath.toString()))) {
+        return set(this.internalConfig, propertyPath.toString(), newValue)
+      }
+    }
+  }
+
 }
