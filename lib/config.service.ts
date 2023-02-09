@@ -105,7 +105,8 @@ export class ConfigService<
       return validatedEnvValue;
     }
     const defaultValue =
-      this.isGetOptionsObject(defaultValueOrOptions) && !options
+      this.isGetOptionsObject(defaultValueOrOptions as Record<string, any>) &&
+      !options
         ? undefined
         : defaultValueOrOptions;
 
@@ -183,7 +184,9 @@ export class ConfigService<
       | undefined;
 
     if (isUndefined(value)) {
-      throw new TypeError(`Configuration key "${propertyPath.toString()}" does not exist`);
+      throw new TypeError(
+        `Configuration key "${propertyPath.toString()}" does not exist`,
+      );
     }
 
     return value as Exclude<T, undefined>;
