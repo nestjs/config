@@ -43,7 +43,7 @@
     "jest": "29.5.0",
     "joi": "17.9.1",
     "lint-staged": "13.2.1",
-    "prettier": "2.8.7",
+    "prettier": "2.8.8",
     "reflect-metadata": "0.1.13",
     "release-it": "15.10.1",
     "rimraf": "5.0.0",
