@@ -192,13 +192,18 @@ export class ConfigModule {
     return config;
   }
 
-  private static assignVariablesToProcess(config: Record<string, any>) {
+  private static assignVariablesToProcess(config: Record<string, unknown>) {
     if (!isObject(config)) {
       return;
     }
     const keys = Object.keys(config).filter(key => !(key in process.env));
     keys.forEach(
-      key => (process.env[key] = (config as Record<string, any>)[key]),
+      key => {
+        const value = config[key];
+        if (typeof value === 'string') {
+          process.env[key] = value;
+        }
+      },
     );
   }
 
