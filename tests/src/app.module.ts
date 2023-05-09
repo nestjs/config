@@ -183,6 +183,20 @@ export class AppModule {
     };
   }
 
+  static withIgnoreEnvVarsOnGet(): DynamicModule {
+    return {
+      module: AppModule,
+      imports: [
+        ConfigModule.forRoot({
+          ignoreEnvVarsOnGet: true,
+          load: [() => ({
+            URL: 'override-from-load'
+          })],
+        }),
+      ],
+    };
+  }
+
   getEnvVariables() {
     return process.env;
   }
