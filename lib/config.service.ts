@@ -8,15 +8,15 @@ import {
 import { NoInferType, Path, PathValue } from './types';
 
 /**
- * `ExcludeUndefinedIf<ExcludeUndefined, T>
+ * `ValidatedResult<WasValidated, T>
  *
- * If `ExcludeUndefined` is `true`, remove `undefined` from `T`.
+ * If `WasValidated` is `true`, return `T`.
  * Otherwise, constructs the type `T` with `undefined`.
  */
-type ExcludeUndefinedIf<
-  ExcludeUndefined extends boolean,
+type ValidatedResult<
+  WasValidated extends boolean,
   T,
-> = ExcludeUndefined extends true ? Exclude<T, undefined> : T | undefined;
+> = WasValidated extends true ? T : T | undefined;
 
 export interface ConfigGetOptions {
   /**
@@ -56,7 +56,7 @@ export class ConfigService<
    * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
    * @param propertyPath
    */
-  get<T = any>(propertyPath: KeyOf<K>): ExcludeUndefinedIf<WasValidated, T>;
+  get<T = any>(propertyPath: KeyOf<K>): ValidatedResult<WasValidated, T>;
   /**
    * Get a configuration value (either custom configuration or process environment variable)
    * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
@@ -66,7 +66,7 @@ export class ConfigService<
   get<T = K, P extends Path<T> = any, R = PathValue<T, P>>(
     propertyPath: P,
     options: ConfigGetOptions,
-  ): ExcludeUndefinedIf<WasValidated, R>;
+  ): ValidatedResult<WasValidated, R>;
   /**
    * Get a configuration value (either custom configuration or process environment variable)
    * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
