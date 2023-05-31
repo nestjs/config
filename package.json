@@ -30,7 +30,7 @@
     "@nestjs/core": "9.4.2",
     "@nestjs/platform-express": "9.4.2",
     "@nestjs/testing": "9.4.2",
-    "@types/jest": "29.5.1",
+    "@types/jest": "29.5.2",
     "@types/lodash": "4.14.195",
     "@types/node": "18.16.16",
     "@types/uuid": "9.0.1",
