@@ -184,8 +184,12 @@ export class ConfigModule {
           config,
         );
         if (options.expandVariables) {
-          const expandOptions: DotenvExpandOptions = typeof options.expandVariables === 'object' ? options.expandVariables : {};
-          config = expand({ ...expandOptions, parsed: config }).parsed || config;
+          const expandOptions: DotenvExpandOptions =
+            typeof options.expandVariables === 'object'
+              ? options.expandVariables
+              : {};
+          config =
+            expand({ ...expandOptions, parsed: config }).parsed || config;
         }
       }
     }
@@ -197,14 +201,14 @@ export class ConfigModule {
       return;
     }
     const keys = Object.keys(config).filter(key => !(key in process.env));
-    keys.forEach(
-      key => {
-        const value = config[key];
-        if (typeof value === 'string') {
-          process.env[key] = value;
-        }
-      },
-    );
+    keys.forEach(key => {
+      const value = config[key];
+      if (typeof value === 'string') {
+        process.env[key] = value;
+      } else if (typeof value === 'boolean' || typeof value === 'number') {
+        process.env[key] = `${value}`;
+      }
+    });
   }
 
   private static mergePartial(
