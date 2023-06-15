@@ -31,11 +31,6 @@ export interface ConfigModuleOptions {
   envFilePath?: string | string[];
 
   /**
-   * Environment file encoding.
-   */
-  encoding?: string;
-
-  /**
    * Custom function to validate environment variables. It takes an object containing environment
    * variables as input and outputs validated environment variables.
    * If exception is thrown in the function it would prevent the application from bootstrapping.
