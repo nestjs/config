@@ -18,7 +18,7 @@
     "release": "release-it"
   },
   "dependencies": {
-    "dotenv": "16.1.4",
+    "dotenv": "16.3.1",
     "dotenv-expand": "10.0.0",
     "lodash": "4.17.21",
     "uuid": "9.0.0"
