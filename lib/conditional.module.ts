@@ -1,7 +1,13 @@
 import { DynamicModule, Logger, ModuleMetadata } from '@nestjs/common';
 import { ConfigModule } from './config.module';
 
+/**
+ * @publicApi
+ */
 export class ConditionalModule {
+  /**
+   * @publicApi
+   */
   static async registerWhen(
     module: Required<ModuleMetadata>['imports'][number],
     condition: string | ((env: NodeJS.ProcessEnv) => boolean),
