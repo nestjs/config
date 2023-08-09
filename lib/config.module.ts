@@ -51,33 +51,7 @@ export class ConfigModule {
    * @param options
    */
   static forRoot(options: ConfigModuleOptions = {}): DynamicModule {
-    let validatedEnvConfig: Record<string, any> | undefined = undefined;
-    let config = options.ignoreEnvFile ? {} : this.loadEnvFile(options);
-
-    if (!options.ignoreEnvVars) {
-      config = {
-        ...config,
-        ...process.env,
-      };
-    }
-    if (options.validate) {
-      const validatedConfig = options.validate(config);
-      validatedEnvConfig = validatedConfig;
-      this.assignVariablesToProcess(validatedConfig);
-    } else if (options.validationSchema) {
-      const validationOptions = this.getSchemaValidationOptions(options);
-      const { error, value: validatedConfig } =
-        options.validationSchema.validate(config, validationOptions);
-
-      if (error) {
-        throw new Error(`Config validation error: ${error.message}`);
-      }
-      validatedEnvConfig = validatedConfig;
-      this.assignVariablesToProcess(validatedConfig);
-    } else {
-      this.assignVariablesToProcess(config);
-    }
-
+    const validatedEnvConfig = ConfigModule.config()
     const isConfigToLoad = options.load && options.load.length;
     const providers = (options.load || [])
       .map(factory =>
@@ -135,6 +109,40 @@ export class ConfigModule {
     };
   }
 
+  /**
+   * Assign .env to process with optional validated config
+   * @param options
+   */
+  static config(options: ConfigModuleOptions = {}){
+    let validatedEnvConfig: Record<string, any> | undefined = undefined;
+    let config = options.ignoreEnvFile ? {} : this.loadEnvFile(options);
+
+    if (!options.ignoreEnvVars) {
+      config = {
+        ...config,
+        ...process.env,
+      };
+    }
+    if (options.validate) {
+      const validatedConfig = options.validate(config);
+      validatedEnvConfig = validatedConfig;
+      this.assignVariablesToProcess(validatedConfig);
+    } else if (options.validationSchema) {
+      const validationOptions = this.getSchemaValidationOptions(options);
+      const { error, value: validatedConfig } =
+          options.validationSchema.validate(config, validationOptions);
+
+      if (error) {
+        throw new Error(`Config validation error: ${error.message}`);
+      }
+      validatedEnvConfig = validatedConfig;
+      this.assignVariablesToProcess(validatedConfig);
+    } else {
+      this.assignVariablesToProcess(config);
+    }
+
+    return validatedEnvConfig
+  }
   /**
    * Registers configuration object (partial registration).
    * @param config
