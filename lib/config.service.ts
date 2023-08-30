@@ -1,6 +1,8 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import { isUndefined } from '@nestjs/common/utils/shared.utils';
-import { get, has, set } from 'lodash';
+import get from 'lodash/get';
+import has from 'lodash/has';
+import set from 'lodash/set';
 import {
   CONFIGURATION_TOKEN,
   VALIDATED_ENV_PROPNAME,
