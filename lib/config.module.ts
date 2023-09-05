@@ -188,8 +188,15 @@ export class ConfigModule {
             typeof options.expandVariables === 'object'
               ? options.expandVariables
               : {};
+          const parsedInExpandOptions = expandOptions?.parsed;
+
           config =
-            expand({ ...expandOptions, parsed: config }).parsed || config;
+            expand({
+              ...expandOptions,
+              parsed: parsedInExpandOptions
+                ? { ...parsedInExpandOptions, ...config }
+                : config,
+            }).parsed || config;
         }
       }
     }
