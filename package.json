@@ -31,7 +31,7 @@
     "@nestjs/platform-express": "10.2.4",
     "@nestjs/testing": "10.2.4",
     "@types/jest": "29.5.4",
-    "@types/lodash": "4.14.197",
+    "@types/lodash": "4.14.198",
     "@types/node": "18.17.15",
     "@types/uuid": "9.0.3",
     "@typescript-eslint/eslint-plugin": "6.5.0",
