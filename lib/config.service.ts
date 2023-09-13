@@ -89,7 +89,7 @@ export class ConfigService<
     propertyPath: P,
     defaultValue: NoInferType<R>,
     options: ConfigGetOptions,
-  ): R;
+  ): Exclude<R, undefined>;
   /**
    * Get a configuration value (either custom configuration or process environment variable)
    * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
