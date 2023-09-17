@@ -1,3 +1,6 @@
+/**
+ * @publicApi
+ */
 export type ConfigType<T extends (...args: any) => any> = T extends (
   ...args: any
 ) => infer ReturnVal

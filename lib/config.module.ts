@@ -20,6 +20,9 @@ import { createConfigProvider } from './utils/create-config-factory.util';
 import { getRegistrationToken } from './utils/get-registration-token.util';
 import { mergeConfigObject } from './utils/merge-configs.util';
 
+/**
+ * @publicApi
+ */
 @Module({
   imports: [ConfigHostModule],
   providers: [

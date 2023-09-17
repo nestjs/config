@@ -5,6 +5,10 @@ import {
 } from './config.constants';
 import { ConfigService } from './config.service';
 
+
+/**
+ * @publicApi
+ */
 @Global()
 @Module({
   providers: [

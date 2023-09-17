@@ -8,6 +8,9 @@ import { ConfigFactory } from '../interfaces';
 import { ConfigObject } from '../types';
 import { getConfigToken } from './get-config-token.util';
 
+/**
+ * @publicApi
+ */
 export interface ConfigFactoryKeyHost<T = unknown> {
   KEY: string;
   asProvider(): {
@@ -18,6 +21,8 @@ export interface ConfigFactoryKeyHost<T = unknown> {
 }
 
 /**
+ * @publicApi
+ * 
  * Registers the configuration object behind a specified token.
  */
 export function registerAs<
