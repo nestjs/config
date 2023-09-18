@@ -4,6 +4,9 @@ import { ConfigFactory } from '../interfaces';
 import { getConfigToken } from './get-config-token.util';
 import { ConfigFactoryKeyHost } from './register-as.util';
 
+/**
+ * @publicApi
+ */
 export function createConfigProvider(
   factory: ConfigFactory & ConfigFactoryKeyHost,
 ): FactoryProvider {

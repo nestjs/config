@@ -1,6 +1,9 @@
 import { ConfigFactory } from './config-factory.interface';
 import { DotenvExpandOptions } from 'dotenv-expand'
 
+/**
+ * @publicApi
+ */
 export interface ConfigModuleOptions {
   /**
    * If "true", values from the process.env object will be cached in the memory.
