@@ -45,7 +45,7 @@
     "lint-staged": "14.0.1",
     "prettier": "3.0.3",
     "reflect-metadata": "0.1.13",
-    "release-it": "16.1.5",
+    "release-it": "16.2.0",
     "rimraf": "5.0.1",
     "ts-jest": "29.1.1",
     "typescript": "5.2.2"
