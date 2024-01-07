@@ -1,5 +1,7 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import { isUndefined } from '@nestjs/common/utils/shared.utils';
+import * as dotenv from 'dotenv';
+import fs from 'fs';
 import get from 'lodash/get';
 import has from 'lodash/has';
 import set from 'lodash/set';
@@ -20,7 +22,6 @@ type ValidatedResult<
   T,
 > = WasValidated extends true ? T : T | undefined;
 
-
 /**
  * @publicApi
  */
@@ -34,7 +35,6 @@ export interface ConfigGetOptions {
 }
 
 type KeyOf<T> = keyof T extends never ? string : keyof T;
-
 
 /**
  * @publicApi
@@ -54,6 +54,7 @@ export class ConfigService<
 
   private readonly cache: Partial<K> = {} as any;
   private _isCacheEnabled = false;
+  private envFilePaths: string[] = [];
 
   constructor(
     @Optional()
@@ -201,6 +202,30 @@ export class ConfigService<
 
     return value as Exclude<T, undefined>;
   }
+  /**
+   * Sets a configuration value based on property path.
+   * @param propertyPath
+   * @param value
+   */
+  set<T = any>(propertyPath: KeyOf<K>, value: T): void {
+    set(this.internalConfig, propertyPath, value);
+
+    if (typeof propertyPath === 'string') {
+      process.env[propertyPath] = String(value);
+      this.updateInterpolatedEnv(propertyPath, String(value));
+    }
+
+    if (this.isCacheEnabled) {
+      this.setInCacheIfDefined(propertyPath, value);
+    }
+  }
+  /**
+   * Sets env file paths from `config.module.ts` to parse.
+   * @param paths
+   */
+  setEnvFilePaths(paths: string[]): void {
+    this.envFilePaths = paths;
+  }
 
   private getFromCache<T = any>(
     propertyPath: KeyOf<K>,
@@ -255,5 +280,24 @@ export class ConfigService<
     options: Record<string, any> | undefined,
   ): options is ConfigGetOptions {
     return options && options?.infer && Object.keys(options).length === 1;
+  }
+
+  private updateInterpolatedEnv(propertyPath: string, value: string) {
+    let config: ReturnType<typeof dotenv.parse> = {};
+    for (const envFilePath of this.envFilePaths) {
+      if (fs.existsSync(envFilePath)) {
+        config = Object.assign(
+          dotenv.parse(fs.readFileSync(envFilePath)),
+          config,
+        );
+      }
+    }
+
+    const regex = new RegExp(`\\$\\{?${propertyPath}\\}?`, 'g');
+    for (const [k, v] of Object.entries(config)) {
+      if (regex.test(v)) {
+        process.env[k] = v.replace(regex, value);
+      }
+    }
   }
 }
