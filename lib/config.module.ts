@@ -54,8 +54,14 @@ export class ConfigModule {
    * @param options
    */
   static forRoot(options: ConfigModuleOptions = {}): DynamicModule {
+    const envFilePaths = Array.isArray(options.envFilePath)
+      ? options.envFilePath
+      : [options.envFilePath || resolve(process.cwd(), '.env')];
+
     let validatedEnvConfig: Record<string, any> | undefined = undefined;
-    let config = options.ignoreEnvFile ? {} : this.loadEnvFile(options);
+    let config = options.ignoreEnvFile
+      ? {}
+      : this.loadEnvFile(envFilePaths, options);
 
     if (!options.ignoreEnvVars) {
       config = {
@@ -95,6 +101,7 @@ export class ConfigModule {
         if (options.cache) {
           (configService as any).isCacheEnabled = true;
         }
+        configService.setEnvFilePaths(envFilePaths);
         return configService;
       },
       inject: [CONFIGURATION_SERVICE_TOKEN, ...configProviderTokens],
@@ -173,12 +180,9 @@ export class ConfigModule {
   }
 
   private static loadEnvFile(
+    envFilePaths: string[],
     options: ConfigModuleOptions,
   ): Record<string, any> {
-    const envFilePaths = Array.isArray(options.envFilePath)
-      ? options.envFilePath
-      : [options.envFilePath || resolve(process.cwd(), '.env')];
-
     let config: ReturnType<typeof dotenv.parse> = {};
     for (const envFilePath of envFilePaths) {
       if (fs.existsSync(envFilePath)) {
