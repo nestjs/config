@@ -5,10 +5,12 @@ import fs from 'fs';
 import get from 'lodash/get';
 import has from 'lodash/has';
 import set from 'lodash/set';
+import { Subject } from 'rxjs';
 import {
   CONFIGURATION_TOKEN,
   VALIDATED_ENV_PROPNAME,
 } from './config.constants';
+import { ConfigChangeEvent } from './interfaces/config-change-event.interface';
 import { NoInferType, Path, PathValue } from './types';
 
 /**
@@ -53,6 +55,7 @@ export class ConfigService<
   }
 
   private readonly cache: Partial<K> = {} as any;
+  private readonly _changes$ = new Subject<ConfigChangeEvent>();
   private _isCacheEnabled = false;
   private envFilePaths: string[] = [];
 
@@ -61,6 +64,14 @@ export class ConfigService<
     @Inject(CONFIGURATION_TOKEN)
     private readonly internalConfig: Record<string, any> = {},
   ) {}
+
+  /**
+   * Returns a stream of configuration changes.
+   * Each event contains the attribute path, the old value and the new value.
+   */
+  get changes$() {
+    return this._changes$.asObservable();
+  }
 
   /**
    * Get a configuration value (either custom configuration or process environment variable)
@@ -208,6 +219,7 @@ export class ConfigService<
    * @param value
    */
   set<T = any>(propertyPath: KeyOf<K>, value: T): void {
+    const oldValue = this.get(propertyPath);
     set(this.internalConfig, propertyPath, value);
 
     if (typeof propertyPath === 'string') {
@@ -218,6 +230,12 @@ export class ConfigService<
     if (this.isCacheEnabled) {
       this.setInCacheIfDefined(propertyPath, value);
     }
+
+    this._changes$.next({
+      path: propertyPath as string,
+      oldValue,
+      newValue: value,
+    });
   }
   /**
    * Sets env file paths from `config.module.ts` to parse.

@@ -47,12 +47,13 @@
     "reflect-metadata": "0.1.14",
     "release-it": "17.0.3",
     "rimraf": "5.0.5",
+    "rxjs": "7.8.1",
     "ts-jest": "29.1.2",
     "typescript": "5.3.3"
   },
   "peerDependencies": {
     "@nestjs/common": "^8.0.0 || ^9.0.0 || ^10.0.0",
-    "reflect-metadata": "^0.1.13"
+    "rxjs": "^7.1.0"
   },
   "lint-staged": {
     "*.ts": [
