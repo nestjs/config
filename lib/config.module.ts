@@ -1,7 +1,6 @@
 import { DynamicModule, Module } from '@nestjs/common';
 import { FactoryProvider } from '@nestjs/common/interfaces';
 import { isObject } from '@nestjs/common/utils/shared.utils';
-import * as dotenv from 'dotenv';
 import { DotenvExpandOptions, expand } from 'dotenv-expand';
 import * as fs from 'fs';
 import { resolve } from 'path';
@@ -15,10 +14,11 @@ import {
 } from './config.constants';
 import { ConfigService } from './config.service';
 import { ConfigFactory, ConfigModuleOptions } from './interfaces';
-import { ConfigFactoryKeyHost } from './utils';
+import { ConfigFactoryKeyHost, getDefaultParser } from './utils';
 import { createConfigProvider } from './utils/create-config-factory.util';
 import { getRegistrationToken } from './utils/get-registration-token.util';
 import { mergeConfigObject } from './utils/merge-configs.util';
+import { Parser } from './types';
 
 /**
  * @publicApi
@@ -35,7 +35,7 @@ import { mergeConfigObject } from './utils/merge-configs.util';
 })
 export class ConfigModule {
   /**
-   * This promise resolves when "dotenv" completes loading environment variables.
+   * This promise resolves when parser completes loading environment variables.
    * When "ignoreEnvFile" is set to true, then it will resolve immediately after the
    * "ConfigModule#forRoot" method is called.
    */
@@ -59,11 +59,12 @@ export class ConfigModule {
     const envFilePaths = Array.isArray(options.envFilePath)
       ? options.envFilePath
       : [options.envFilePath || resolve(process.cwd(), '.env')];
+    const parser = options.parser ?? getDefaultParser();
 
     let validatedEnvConfig: Record<string, any> | undefined = undefined;
     let config = options.ignoreEnvFile
       ? {}
-      : this.loadEnvFile(envFilePaths, options);
+      : this.loadEnvFile(envFilePaths, parser, options);
 
     if (!options.ignoreEnvVars && options.validatePredefined !== false) {
       config = {
@@ -111,6 +112,7 @@ export class ConfigModule {
         }
 
         configService.setEnvFilePaths(envFilePaths);
+        configService.setParser(parser);
         return configService;
       },
       inject: [CONFIGURATION_SERVICE_TOKEN, ...configProviderTokens],
@@ -190,15 +192,13 @@ export class ConfigModule {
 
   private static loadEnvFile(
     envFilePaths: string[],
+    parser: Parser,
     options: ConfigModuleOptions,
   ): Record<string, any> {
-    let config: ReturnType<typeof dotenv.parse> = {};
+    let config: Record<string, any> = {};
     for (const envFilePath of envFilePaths) {
       if (fs.existsSync(envFilePath)) {
-        config = Object.assign(
-          dotenv.parse(fs.readFileSync(envFilePath)),
-          config,
-        );
+        config = Object.assign(parser(fs.readFileSync(envFilePath)), config);
         if (options.expandVariables) {
           const expandOptions: DotenvExpandOptions =
             typeof options.expandVariables === 'object'
