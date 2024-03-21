@@ -1,7 +1,7 @@
 import { DynamicModule, Inject, Module, Optional } from '@nestjs/common';
 import Joi from 'joi';
 import { join } from 'path';
-import { ConfigType } from '../../lib';
+import { ConfigFactory, ConfigType } from '../../lib';
 import { ConfigModule } from '../../lib/config.module';
 import { ConfigService } from '../../lib/config.service';
 import databaseConfig from './database.config';
@@ -98,7 +98,21 @@ export class AppModule {
       imports: [
         ConfigModule.forRoot({
           envFilePath: join(__dirname, '.env.expanded'),
-          expandVariables: { ignoreProcessEnv: true }
+          expandVariables: { ignoreProcessEnv: true },
+        }),
+      ],
+    };
+  }
+
+  static withEnvVarsAndLoadedConfigurations(
+    configFactory: ConfigFactory[],
+  ): DynamicModule {
+    return {
+      module: AppModule,
+      imports: [
+        ConfigModule.forRoot({
+          envFilePath: join(__dirname, '.env'),
+          load: configFactory,
         }),
       ],
     };
@@ -132,6 +146,19 @@ export class AppModule {
       imports: [
         ConfigModule.forRoot({
           load: [nestedDatabaseConfig],
+        }),
+      ],
+    };
+  }
+
+  static withMultipleLoadedConfigurations(
+    configFactory: ConfigFactory[],
+  ): DynamicModule {
+    return {
+      module: AppModule,
+      imports: [
+        ConfigModule.forRoot({
+          load: configFactory,
         }),
       ],
     };
