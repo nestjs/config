@@ -7,7 +7,9 @@ describe('Cache', () => {
   let app: INestApplication;
   let envBackup: NodeJS.ProcessEnv;
   beforeAll(() => {
-    envBackup = process.env;
+    envBackup = {
+      ...process.env,
+    };
   });
   describe('without cache', () => {
     beforeAll(async () => {
@@ -56,7 +58,9 @@ describe('Cache', () => {
   });
 
   afterEach(async () => {
-    process.env = envBackup;
+    process.env = {
+      ...envBackup,
+    };
     await app.close();
   });
 });
