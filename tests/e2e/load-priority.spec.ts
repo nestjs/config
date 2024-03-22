@@ -66,6 +66,47 @@ describe('Environment variables and .env files', () => {
     });
   });
 
+  describe('with conflicts of .env file and loaded configuration', () => {
+    beforeAll(async () => {
+      const moduleRef = await Test.createTestingModule({
+        imports: [
+          AppModule.withEnvVarsAndLoadedConfigurations([
+            () => ({ PORT: '8000' }),
+          ]),
+        ],
+      }).compile();
+
+      app = moduleRef.createNestApplication();
+      await app.init();
+    });
+
+    it('should choose .env file vars over load configuration', () => {
+      const configService = app.get(ConfigService);
+      expect(configService.get('PORT')).toEqual('4000');
+    });
+  });
+
+  describe('with conflicts of multiple loaded configurations', () => {
+    beforeAll(async () => {
+      const moduleRef = await Test.createTestingModule({
+        imports: [
+          AppModule.withDynamicLoadedConfigurations([
+            () => ({ PORT: '8000' }),
+            () => ({ PORT: '9000' }),
+          ]),
+        ],
+      }).compile();
+
+      app = moduleRef.createNestApplication();
+      await app.init();
+    });
+
+    it('should choose last load configuration', () => {
+      const configService = app.get(ConfigService);
+      expect(configService.get('PORT')).toEqual('9000');
+    });
+  });
+
   afterEach(async () => {
     process.env = {
       ...envBackup,
