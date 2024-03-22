@@ -8,7 +8,9 @@ describe('Environment variables and .env files', () => {
   let app: INestApplication;
   let envBackup: NodeJS.ProcessEnv;
   beforeAll(() => {
-    envBackup = process.env;
+    envBackup = {
+      ...process.env,
+    };
   });
   describe('without conflicts', () => {
     beforeAll(async () => {
@@ -65,7 +67,9 @@ describe('Environment variables and .env files', () => {
   });
 
   afterEach(async () => {
-    process.env = envBackup;
+    process.env = {
+      ...envBackup,
+    };
     await app.close();
   });
 });
