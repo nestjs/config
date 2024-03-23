@@ -1,5 +1,6 @@
 import { ConfigFactory } from './config-factory.interface';
-import { DotenvExpandOptions } from 'dotenv-expand'
+import { DotenvExpandOptions } from 'dotenv-expand';
+import { Parser } from '../types';
 
 /**
  * @publicApi
@@ -66,4 +67,9 @@ export interface ConfigModuleOptions {
    * this property is set to true.
    */
   expandVariables?: boolean | DotenvExpandOptions;
+
+  /**
+   * A function used to parse a buffer into a configuration object.
+   */
+  parser?: Parser;
 }
