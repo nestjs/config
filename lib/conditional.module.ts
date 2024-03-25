@@ -13,15 +13,15 @@ export class ConditionalModule {
     condition: string | ((env: NodeJS.ProcessEnv) => boolean),
     options?: { timeout: number },
   ) {
-    let configResolved = false;
     const { timeout = 5000 } = options ?? {};
-    setTimeout(() => {
-      if (!configResolved) {
-        throw new Error(
-          `Nest was not able to resolve the config variables within ${timeout} milliseconds. Bause of this, the ConditionalModule was not able to determine if ${module.toString()} should be registered or not`,
-        );
-      }
+
+    const timer = setTimeout(() => {
+      throw new Error(
+        `Nest was not able to resolve the config variables within ${timeout} milliseconds. Bause of this, the ConditionalModule was not able to determine if ${module.toString()} should be registered or not`,
+      );
     }, timeout);
+    timer.unref();
+
     const returnModule: Required<
       Pick<DynamicModule, 'module' | 'imports' | 'exports'>
     > = { module: ConditionalModule, imports: [], exports: [] };
@@ -32,7 +32,7 @@ export class ConditionalModule {
       };
     }
     await ConfigModule.envVariablesLoaded;
-    configResolved = true;
+    clearTimeout(timer);
     const evaluation = condition(process.env);
     if (evaluation) {
       returnModule.imports.push(module);
