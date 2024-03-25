@@ -14,11 +14,14 @@ export class ConditionalModule {
     options?: { timeout: number },
   ) {
     const { timeout = 5000 } = options ?? {};
+
     const timer = setTimeout(() => {
       throw new Error(
         `Nest was not able to resolve the config variables within ${timeout} milliseconds. Bause of this, the ConditionalModule was not able to determine if ${module.toString()} should be registered or not`,
       );
     }, timeout);
+    timer.unref();
+
     const returnModule: Required<
       Pick<DynamicModule, 'module' | 'imports' | 'exports'>
     > = { module: ConditionalModule, imports: [], exports: [] };
