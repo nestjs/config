@@ -140,6 +140,17 @@ export class AppModule {
     };
   }
 
+  static withAsyncLoadedConfigurations(configFactoryPromise: Promise<ConfigFactory[]>): DynamicModule {
+    return {
+      module: AppModule,
+      imports: [
+        ConfigModule.forRoot({
+          loadAsync: configFactoryPromise,
+        }),
+      ],
+    };
+  }
+
   static withNestedLoadedConfigurations(): DynamicModule {
     return {
       module: AppModule,

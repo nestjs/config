@@ -60,6 +60,12 @@ export interface ConfigModuleOptions {
   load?: Array<ConfigFactory>;
 
   /**
+   * Promise of array of custom configuration files to be loaded.
+   * See: https://docs.nestjs.com/techniques/configuration
+   */
+  loadAsync?: Promise<Array<ConfigFactory>>;
+
+  /**
    * A boolean value indicating the use of expanded variables, or object
    * containing options to pass to dotenv-expand.
    * If .env contains expanded variables, they'll only be parsed if

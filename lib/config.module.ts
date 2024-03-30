@@ -87,8 +87,12 @@ export class ConfigModule {
       this.assignVariablesToProcess(config);
     }
 
-    const isConfigToLoad = options.load && options.load.length;
-    const providers = (options.load || [])
+    let configFactory: ConfigFactory[] = [];
+    if(options.loadAsync) options.loadAsync.then((configFact) => { configFactory = configFact })
+    if(options.load) configFactory = options.load
+    
+    const isConfigToLoad = configFactory && configFactory.length;
+    const providers = configFactory
       .map(factory =>
         createConfigProvider(factory as ConfigFactory & ConfigFactoryKeyHost),
       )

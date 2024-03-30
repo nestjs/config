@@ -86,6 +86,30 @@ describe('Environment variables and .env files', () => {
     });
   });
 
+  describe('withAsyncLoadedConfigurations', () => {
+    it('should load configurations asynchronously', async () => {
+      // Mock the async loading of configuration factories
+      const configFactoryPromise = Promise.resolve([
+        () => ({ PORT: '8000' }), // Simulate loading configuration factories asynchronously
+      ]);
+
+      // Create a testing module with AppModule configured to load configurations asynchronously
+      const moduleRef = await Test.createTestingModule({
+        imports: [AppModule.withAsyncLoadedConfigurations(configFactoryPromise)],
+      }).compile();
+
+      // Create the Nest application
+      app = moduleRef.createNestApplication();
+      await app.init();
+
+      // Retrieve the ConfigService
+      const configService = app.get(ConfigService);
+
+      // Assert that the configurations are loaded correctly
+      expect(configService.get('PORT')).toEqual('8000');
+    });
+  });
+
   describe('with conflicts of multiple loaded configurations', () => {
     beforeAll(async () => {
       const moduleRef = await Test.createTestingModule({
