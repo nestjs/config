@@ -11,9 +11,9 @@ export class ConditionalModule {
   static async registerWhen(
     module: Required<ModuleMetadata>['imports'][number],
     condition: string | ((env: NodeJS.ProcessEnv) => boolean),
-    options?: { timeout: number },
+    options?: { timeout?: number; debug?: boolean },
   ) {
-    const { timeout = 5000 } = options ?? {};
+    const { timeout = 5000, debug = true } = options ?? {};
 
     const timer = setTimeout(() => {
       throw new Error(
@@ -38,10 +38,12 @@ export class ConditionalModule {
       returnModule.imports.push(module);
       returnModule.exports.push(module);
     } else {
-      Logger.debug(
-        `${condition.toString()} evaluated to false. Skipping the registration of ${module.toString()}`,
-        ConditionalModule.name,
-      );
+      if (debug) {
+        Logger.debug(
+          `${condition.toString()} evaluated to false. Skipping the registration of ${module.toString()}`,
+          ConditionalModule.name,
+        );
+      }
     }
     return returnModule;
   }
