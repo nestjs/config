@@ -49,7 +49,7 @@
     "rimraf": "5.0.5",
     "rxjs": "7.8.1",
     "ts-jest": "29.1.2",
-    "typescript": "5.4.3"
+    "typescript": "5.4.4"
   },
   "peerDependencies": {
     "@nestjs/common": "^8.0.0 || ^9.0.0 || ^10.0.0",
