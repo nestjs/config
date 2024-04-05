@@ -53,7 +53,7 @@ export class ConfigModule {
    * Also, registers custom configurations globally.
    * @param options
    */
-  static forRoot(options: ConfigModuleOptions = {}): DynamicModule {
+  static async forRoot(options: ConfigModuleOptions = {}): Promise<DynamicModule> {
     const envFilePaths = Array.isArray(options.envFilePath)
       ? options.envFilePath
       : [options.envFilePath || resolve(process.cwd(), '.env')];
@@ -87,9 +87,12 @@ export class ConfigModule {
       this.assignVariablesToProcess(config);
     }
 
-    let configFactory: ConfigFactory[] = [];
-    if(options.loadAsync) options.loadAsync.then((configFact) => { configFactory = configFact })
-    if(options.load) configFactory = options.load
+    const configFactory: ConfigFactory[] = [];
+    if (options.loadAsync) {
+        const resolvedConfigs = await Promise.all(options.loadAsync.map((configFactory) => configFactory) );
+        configFactory.push(...resolvedConfigs);
+    }
+    if (options.load) configFactory.push(...options.load);
     
     const isConfigToLoad = configFactory && configFactory.length;
     const providers = configFactory

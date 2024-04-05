@@ -140,12 +140,12 @@ export class AppModule {
     };
   }
 
-  static withAsyncLoadedConfigurations(configFactoryPromise: Promise<ConfigFactory[]>): DynamicModule {
+  static withAsyncLoadedConfigurations(configFactoryPromise: Promise<ConfigFactory>): DynamicModule {
     return {
       module: AppModule,
       imports: [
         ConfigModule.forRoot({
-          loadAsync: configFactoryPromise,
+          loadAsync: [configFactoryPromise],
         }),
       ],
     };

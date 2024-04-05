@@ -89,10 +89,8 @@ describe('Environment variables and .env files', () => {
   describe('withAsyncLoadedConfigurations', () => {
     it('should load configurations asynchronously', async () => {
       // Mock the async loading of configuration factories
-      const configFactoryPromise = Promise.resolve([
-        () => ({ PORT: '8000' }), // Simulate loading configuration factories asynchronously
-      ]);
-
+      const configFactoryPromise =  Promise.resolve(() => ({ PORT: '8000' }));
+      
       // Create a testing module with AppModule configured to load configurations asynchronously
       const moduleRef = await Test.createTestingModule({
         imports: [AppModule.withAsyncLoadedConfigurations(configFactoryPromise)],
@@ -104,7 +102,7 @@ describe('Environment variables and .env files', () => {
 
       // Retrieve the ConfigService
       const configService = app.get(ConfigService);
-
+      
       // Assert that the configurations are loaded correctly
       expect(configService.get('PORT')).toEqual('8000');
     });
