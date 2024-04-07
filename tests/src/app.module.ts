@@ -140,6 +140,17 @@ export class AppModule {
     };
   }
 
+  static withLoadedAsyncConfigurations() {
+    return {
+      module: AppModule,
+      imports: [
+        ConfigModule.forRoot({
+          load: [Promise.resolve(databaseConfig)],
+        }),
+      ],
+    };
+  }
+
   static withNestedLoadedConfigurations(): DynamicModule {
     return {
       module: AppModule,
