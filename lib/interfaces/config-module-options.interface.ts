@@ -57,7 +57,7 @@ export interface ConfigModuleOptions {
    * Array of custom configuration files to be loaded.
    * See: https://docs.nestjs.com/techniques/configuration
    */
-  load?: Array<ConfigFactory>;
+  load?: Array<ConfigFactory | Promise<ConfigFactory>>;
 
   /**
    * A boolean value indicating the use of expanded variables, or object
