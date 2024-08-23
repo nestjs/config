@@ -46,7 +46,7 @@
     "release-it": "17.6.0",
     "rimraf": "6.0.1",
     "rxjs": "7.8.1",
-    "ts-jest": "29.2.4",
+    "ts-jest": "29.2.5",
     "typescript": "5.5.4"
   },
   "peerDependencies": {
