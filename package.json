@@ -31,7 +31,7 @@
     "@nestjs/testing": "10.4.1",
     "@types/jest": "29.5.12",
     "@types/lodash": "4.17.7",
-    "@types/node": "20.16.4",
+    "@types/node": "20.16.5",
     "@typescript-eslint/eslint-plugin": "8.4.0",
     "@typescript-eslint/parser": "8.4.0",
     "eslint": "8.57.0",
