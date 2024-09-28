@@ -129,6 +129,17 @@ export class AppModule {
     };
   }
 
+  static withGlobMatchEnvFiles(): DynamicModule {
+    return {
+      module: AppModule,
+      imports: [
+        ConfigModule.forRoot({
+          envFilePath: join(__dirname, '.env*'),
+        }),
+      ],
+    };
+  }
+
   static withLoadedConfigurations(): DynamicModule {
     return {
       module: AppModule,

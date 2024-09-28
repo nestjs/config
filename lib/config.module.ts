@@ -19,6 +19,7 @@ import { ConfigFactoryKeyHost } from './utils';
 import { createConfigProvider } from './utils/create-config-factory.util';
 import { getRegistrationToken } from './utils/get-registration-token.util';
 import { mergeConfigObject } from './utils/merge-configs.util';
+import { globSync } from 'glob';
 
 /**
  * @publicApi
@@ -185,21 +186,26 @@ export class ConfigModule {
   ): Record<string, any> {
     let config: ReturnType<typeof dotenv.parse> = {};
     for (const envFilePath of envFilePaths) {
-      if (fs.existsSync(envFilePath)) {
-        config = Object.assign(
-          dotenv.parse(fs.readFileSync(envFilePath)),
-          config,
-        );
-        if (options.expandVariables) {
-          const expandOptions: DotenvExpandOptions =
-            typeof options.expandVariables === 'object'
-              ? options.expandVariables
-              : {};
-          config =
-            expand({ ...expandOptions, parsed: config }).parsed || config;
+      const filePaths = globSync(envFilePath, { ignore: 'node_modules/**', dot: true });
+
+      for (const filePath of filePaths) {
+        if (fs.existsSync(filePath)) {
+          config = Object.assign(
+            dotenv.parse(fs.readFileSync(filePath)),
+            config,
+          );
+          if (options.expandVariables) {
+            const expandOptions: DotenvExpandOptions =
+              typeof options.expandVariables === 'object'
+                ? options.expandVariables
+                : {};
+            config =
+              expand({ ...expandOptions, parsed: config }).parsed || config;
+          }
         }
       }
     }
+
     return config;
   }
 
