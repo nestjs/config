@@ -30,7 +30,7 @@
     "@nestjs/platform-express": "10.4.4",
     "@nestjs/testing": "10.4.4",
     "@types/jest": "29.5.13",
-    "@types/lodash": "4.17.9",
+    "@types/lodash": "4.17.10",
     "@types/node": "20.16.10",
     "@typescript-eslint/eslint-plugin": "8.8.0",
     "@typescript-eslint/parser": "8.8.0",
