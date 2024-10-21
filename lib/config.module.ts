@@ -88,7 +88,7 @@ export class ConfigModule {
     }
 
     const isConfigToLoad = options.load && options.load.length;
-    const configFactory = options.load ? await Promise.all(options.load.map((configFactory) => configFactory)) : [];
+    const configFactory = await Promise.all(options.load || []);
     const providers = configFactory
       .map(factory =>
         createConfigProvider(factory as ConfigFactory & ConfigFactoryKeyHost),
