@@ -1,5 +1,5 @@
+import { DotenvExpandOptions } from 'dotenv-expand';
 import { ConfigFactory } from './config-factory.interface';
-import { DotenvExpandOptions } from 'dotenv-expand'
 
 /**
  * @publicApi
