@@ -4,7 +4,9 @@ import { ConfigFactory } from './config-factory.interface';
 /**
  * @publicApi
  */
-export interface ConfigModuleOptions {
+export interface ConfigModuleOptions<
+  ValidationOptions extends Record<string, any> = Record<string, any>,
+> {
   /**
    * If "true", values from the process.env object will be cached in the memory.
    * This improves the overall application performance.
@@ -25,6 +27,7 @@ export interface ConfigModuleOptions {
 
   /**
    * If "true", predefined environment variables will not be validated.
+   * @deprecated Use `validatePredefined` instead.
    */
   ignoreEnvVars?: boolean;
 
@@ -43,6 +46,19 @@ export interface ConfigModuleOptions {
   validate?: (config: Record<string, any>) => Record<string, any>;
 
   /**
+   * If "true", predefined environment variables will be validated.
+   * Predefined environment variables are process variables that were set before the module was imported.
+   * @default true
+   */
+  validatePredefined?: boolean;
+
+  /**
+   * If "true", predefined environment variables will be ignored and not picked up by the `ConfigService#get` method.
+   * @default false
+   */
+  skipPredefined?: boolean;
+
+  /**
    * Environment variables validation schema (Joi).
    */
   validationSchema?: any;
@@ -51,7 +67,7 @@ export interface ConfigModuleOptions {
    * Schema validation options.
    * See: https://joi.dev/api/?v=17.3.0#anyvalidatevalue-options
    */
-  validationOptions?: Record<string, any>;
+  validationOptions?: ValidationOptions;
 
   /**
    * Array of custom configuration files to be loaded.
