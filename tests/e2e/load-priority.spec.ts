@@ -80,9 +80,9 @@ describe('Environment variables and .env files', () => {
       await app.init();
     });
 
-    it('should choose .env file vars over load configuration', () => {
+    it('should choose the load configuration over .env file vars', () => {
       const configService = app.get(ConfigService);
-      expect(configService.get('PORT')).toEqual('4000');
+      expect(configService.get('PORT')).toEqual('8000');
     });
   });
 
