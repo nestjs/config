@@ -206,7 +206,9 @@ export class ConfigModule {
     return config;
   }
 
-  private static assignVariablesToProcess(config: Record<string, unknown>) {
+  private static assignVariablesToProcess(
+    config: Record<string, unknown>,
+  ): void {
     if (!isObject(config)) {
       return;
     }
