@@ -233,7 +233,9 @@ export class ConfigModule {
     mergeConfigObject(host, item, token);
   }
 
-  private static getSchemaValidationOptions(options: ConfigModuleOptions) {
+  private static getSchemaValidationOptions(
+    options: ConfigModuleOptions,
+  ): Record<string, any> {
     if (options.validationOptions) {
       if (typeof options.validationOptions.allowUnknown === 'undefined') {
         options.validationOptions.allowUnknown = true;
