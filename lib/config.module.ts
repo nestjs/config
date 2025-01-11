@@ -206,7 +206,9 @@ export class ConfigModule {
     return config;
   }
 
-  private static assignVariablesToProcess(config: Record<string, unknown>) {
+  private static assignVariablesToProcess(
+    config: Record<string, unknown>,
+  ): void {
     if (!isObject(config)) {
       return;
     }
@@ -225,13 +227,15 @@ export class ConfigModule {
     host: Record<string, any>,
     item: Record<string, any>,
     provider: FactoryProvider,
-  ) {
+  ): void {
     const factoryRef = provider.useFactory;
     const token = getRegistrationToken(factoryRef);
     mergeConfigObject(host, item, token);
   }
 
-  private static getSchemaValidationOptions(options: ConfigModuleOptions) {
+  private static getSchemaValidationOptions(
+    options: ConfigModuleOptions,
+  ): Record<string, any> {
     if (options.validationOptions) {
       if (typeof options.validationOptions.allowUnknown === 'undefined') {
         options.validationOptions.allowUnknown = true;
