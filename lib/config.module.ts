@@ -227,7 +227,7 @@ export class ConfigModule {
     host: Record<string, any>,
     item: Record<string, any>,
     provider: FactoryProvider,
-  ) {
+  ): void {
     const factoryRef = provider.useFactory;
     const token = getRegistrationToken(factoryRef);
     mergeConfigObject(host, item, token);
