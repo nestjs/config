@@ -95,7 +95,7 @@ export class ConfigModule {
       .map(factory =>
         createConfigProvider(factory as ConfigFactory & ConfigFactoryKeyHost),
       )
-      .filter(item => item) as FactoryProvider[];
+      .filter(item => item);
 
     const configProviderTokens = providers.map(item => item.provide);
     const configServiceProvider = {

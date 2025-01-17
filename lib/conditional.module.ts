@@ -1,4 +1,10 @@
-import { DynamicModule, ForwardReference, Logger, ModuleMetadata, Type } from '@nestjs/common';
+import {
+  DynamicModule,
+  ForwardReference,
+  Logger,
+  ModuleMetadata,
+  Type,
+} from '@nestjs/common';
 import { ConfigModule } from './config.module';
 
 /**
