@@ -54,8 +54,17 @@ export class ConfigService<
     return this._isCacheEnabled;
   }
 
+  private set skipPredefined(value: boolean) {
+    this._skipPredefined = value;
+  }
+
+  private get skipPredefined(): boolean {
+    return this._skipPredefined;
+  }
+
   private readonly cache: Partial<K> = {} as any;
   private readonly _changes$ = new Subject<ConfigChangeEvent>();
+  private _skipPredefined = false;
   private _isCacheEnabled = false;
   private envFilePaths: string[] = [];
 
@@ -122,6 +131,11 @@ export class ConfigService<
     defaultValueOrOptions?: T | ConfigGetOptions,
     options?: ConfigGetOptions,
   ): T | undefined {
+    const internalValue = this.getFromInternalConfig(propertyPath);
+    if (!isUndefined(internalValue)) {
+      return internalValue;
+    }
+
     const validatedEnvValue = this.getFromValidatedEnv(propertyPath);
     if (!isUndefined(validatedEnvValue)) {
       return validatedEnvValue;
@@ -132,14 +146,14 @@ export class ConfigService<
         ? undefined
         : defaultValueOrOptions;
 
-    const processEnvValue = this.getFromProcessEnv(propertyPath, defaultValue);
-    if (!isUndefined(processEnvValue)) {
-      return processEnvValue;
-    }
-
-    const internalValue = this.getFromInternalConfig(propertyPath);
-    if (!isUndefined(internalValue)) {
-      return internalValue;
+    if (!this.skipPredefined) {
+      const processEnvValue = this.getFromProcessEnv(
+        propertyPath,
+        defaultValue,
+      );
+      if (!isUndefined(processEnvValue)) {
+        return processEnvValue;
+      }
     }
 
     return defaultValue as T;

@@ -53,8 +53,8 @@ export class ConfigModule {
    * Also, registers custom configurations globally.
    * @param options
    */
-  static async forRoot(
-    options: ConfigModuleOptions = {},
+  static async forRoot<ValidationOptions extends Record<string, any>>(
+    options: ConfigModuleOptions<ValidationOptions> = {},
   ): Promise<DynamicModule> {
     const envFilePaths = Array.isArray(options.envFilePath)
       ? options.envFilePath
@@ -65,12 +65,13 @@ export class ConfigModule {
       ? {}
       : this.loadEnvFile(envFilePaths, options);
 
-    if (!options.ignoreEnvVars) {
+    if (!options.ignoreEnvVars || options.validatePredefined) {
       config = {
         ...config,
         ...process.env,
       };
     }
+
     if (options.validate) {
       const validatedConfig = options.validate(config);
       validatedEnvConfig = validatedConfig;
@@ -101,9 +102,14 @@ export class ConfigModule {
     const configServiceProvider = {
       provide: ConfigService,
       useFactory: (configService: ConfigService) => {
+        const untypedConfigService = configService as any;
         if (options.cache) {
-          (configService as any).isCacheEnabled = true;
+          untypedConfigService.isCacheEnabled = true;
         }
+        if (options.skipPredefined) {
+          untypedConfigService.skipPredefined = true;
+        }
+
         configService.setEnvFilePaths(envFilePaths);
         return configService;
       },
