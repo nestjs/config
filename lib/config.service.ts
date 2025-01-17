@@ -54,17 +54,17 @@ export class ConfigService<
     return this._isCacheEnabled;
   }
 
-  private set skipPredefined(value: boolean) {
-    this._skipPredefined = value;
+  private set skipProcessEnv(value: boolean) {
+    this._skipProcessEnv = value;
   }
 
-  private get skipPredefined(): boolean {
-    return this._skipPredefined;
+  private get skipProcessEnv(): boolean {
+    return this._skipProcessEnv;
   }
 
   private readonly cache: Partial<K> = {} as any;
   private readonly _changes$ = new Subject<ConfigChangeEvent>();
-  private _skipPredefined = false;
+  private _skipProcessEnv = false;
   private _isCacheEnabled = false;
   private envFilePaths: string[] = [];
 
@@ -146,7 +146,7 @@ export class ConfigService<
         ? undefined
         : defaultValueOrOptions;
 
-    if (!this.skipPredefined) {
+    if (!this._skipProcessEnv) {
       const processEnvValue = this.getFromProcessEnv(
         propertyPath,
         defaultValue,

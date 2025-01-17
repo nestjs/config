@@ -68,14 +68,14 @@ export class AppModule {
     };
   }
 
-  static withSkipPredefined(): DynamicModule {
+  static withSkipProcessEnv(): DynamicModule {
     return {
       module: AppModule,
       imports: [
         ConfigModule.forRoot({
           envFilePath: join(__dirname, '.env'),
           load: [() => ({ obj: { test: 'true', test2: undefined } })],
-          skipPredefined: true,
+          skipProcessEnv: true,
         }),
       ],
     };

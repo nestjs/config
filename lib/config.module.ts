@@ -49,8 +49,8 @@ export class ConfigModule {
   );
 
   /**
-   * Loads process environment variables depending on the "ignoreEnvFile" flag and "envFilePath" value.
-   * Also, registers custom configurations globally.
+   * Loads environment variables based on the "ignoreEnvFile" flag and "envFilePath" value.
+   * Additionally, registers custom configurations globally.
    * @param options
    */
   static async forRoot<ValidationOptions extends Record<string, any>>(
@@ -106,8 +106,8 @@ export class ConfigModule {
         if (options.cache) {
           untypedConfigService.isCacheEnabled = true;
         }
-        if (options.skipPredefined) {
-          untypedConfigService.skipPredefined = true;
+        if (options.skipProcessEnv) {
+          untypedConfigService.skipProcessEnv = true;
         }
 
         configService.setEnvFilePaths(envFilePaths);

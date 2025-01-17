@@ -47,16 +47,18 @@ export interface ConfigModuleOptions<
 
   /**
    * If "true", predefined environment variables will be validated.
-   * Predefined environment variables are process variables that were set before the module was imported.
+   * Predefined environment variables are process variables (process.env variables) that were set before the module was imported.
+   * For example, if you start your application with `PORT=3000 node main.js`, then `PORT` is a predefined environment variable.
+   * Variables that were loaded by the `ConfigModule` from the .env file are not considered predefined.
    * @default true
    */
   validatePredefined?: boolean;
 
   /**
-   * If "true", predefined environment variables will be ignored and not picked up by the `ConfigService#get` method.
+   * If "true", process environment variables (process.env) will be ignored and not picked up by the `ConfigService#get` method.
    * @default false
    */
-  skipPredefined?: boolean;
+  skipProcessEnv?: boolean;
 
   /**
    * Environment variables validation schema (Joi).
