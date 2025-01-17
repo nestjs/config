@@ -300,7 +300,7 @@ export class ConfigService<
     return options && options?.infer && Object.keys(options).length === 1;
   }
 
-  private updateInterpolatedEnv(propertyPath: string, value: string) {
+  private updateInterpolatedEnv(propertyPath: string, value: string): void {
     let config: ReturnType<typeof dotenv.parse> = {};
     for (const envFilePath of this.envFilePaths) {
       if (fs.existsSync(envFilePath)) {
