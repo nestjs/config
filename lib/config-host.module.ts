@@ -5,7 +5,6 @@ import {
 } from './config.constants';
 import { ConfigService } from './config.service';
 
-
 /**
  * @publicApi
  */

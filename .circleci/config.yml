@@ -7,7 +7,7 @@ aliases:
   - &install-deps
     run:
       name: Install dependencies
-      command: npm ci --ignore-scripts
+      command: npm install --ignore-scripts
   - &build-packages
     run:
       name: Build
@@ -20,14 +20,11 @@ jobs:
       - image: cimg/node:22.3
     steps:
       - checkout
-      - run:
-          name: Update NPM version
-          command: sudo npm install -g npm@latest
       - restore_cache:
           key: dependency-cache-{{ checksum "package.json" }}
       - run:
           name: Install dependencies
-          command: npm ci --ignore-scripts
+          command: npm install --ignore-scripts
       - save_cache:
           key: dependency-cache-{{ checksum "package.json" }}
           paths:

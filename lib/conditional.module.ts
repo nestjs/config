@@ -1,4 +1,10 @@
-import { DynamicModule, ForwardReference, Logger, ModuleMetadata, Type } from '@nestjs/common';
+import {
+  DynamicModule,
+  ForwardReference,
+  Logger,
+  ModuleMetadata,
+  Type,
+} from '@nestjs/common';
 import { ConfigModule } from './config.module';
 
 /**
@@ -54,7 +60,7 @@ export class ConditionalModule {
     const evaluation = condition(process.env);
     if (evaluation) {
       returnModule.imports.push(module);
-      returnModule.exports.push(module);
+      returnModule.exports.push(module as Exclude<typeof module, Promise<any>>);
     } else {
       if (debug) {
         Logger.debug(

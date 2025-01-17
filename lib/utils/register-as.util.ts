@@ -22,7 +22,7 @@ export interface ConfigFactoryKeyHost<T = unknown> {
 
 /**
  * @publicApi
- * 
+ *
  * Registers the configuration object behind a specified token.
  */
 export function registerAs<

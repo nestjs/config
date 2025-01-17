@@ -111,7 +111,7 @@ export class AppModule {
       imports: [
         ConfigModule.forRoot({
           envFilePath: join(__dirname, '.env.expanded'),
-          expandVariables: { ignoreProcessEnv: true },
+          expandVariables: { processEnv: {} },
         }),
       ],
     };
