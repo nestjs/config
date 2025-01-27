@@ -60,7 +60,6 @@ export class ConfigModule {
       ? options.envFilePath
       : [options.envFilePath || resolve(process.cwd(), '.env')];
 
-    let validatedEnvConfig: Record<string, any> | undefined = undefined;
     let config = options.ignoreEnvFile
       ? {}
       : this.loadEnvFile(envFilePaths, options);
@@ -70,24 +69,6 @@ export class ConfigModule {
         ...config,
         ...process.env,
       };
-    }
-
-    if (options.validate) {
-      const validatedConfig = options.validate(config);
-      validatedEnvConfig = validatedConfig;
-      this.assignVariablesToProcess(validatedConfig);
-    } else if (options.validationSchema) {
-      const validationOptions = this.getSchemaValidationOptions(options);
-      const { error, value: validatedConfig } =
-        options.validationSchema.validate(config, validationOptions);
-
-      if (error) {
-        throw new Error(`Config validation error: ${error.message}`);
-      }
-      validatedEnvConfig = validatedConfig;
-      this.assignVariablesToProcess(validatedConfig);
-    } else {
-      this.assignVariablesToProcess(config);
     }
 
     const isConfigToLoad = options.load && options.load.length;
@@ -117,15 +98,20 @@ export class ConfigModule {
     };
     providers.push(configServiceProvider);
 
-    if (validatedEnvConfig) {
+    if (options.validate || options.validationSchema) {
       const validatedEnvConfigLoader = {
         provide: VALIDATED_ENV_LOADER,
         useFactory: (host: Record<string, any>) => {
+          const validatedEnvConfig = this.validateConfig(options, config);
+          this.assignVariablesToProcess(validatedEnvConfig);
           host[VALIDATED_ENV_PROPNAME] = validatedEnvConfig;
         },
         inject: [CONFIGURATION_TOKEN],
       };
+
       providers.push(validatedEnvConfigLoader);
+    } else {
+      this.assignVariablesToProcess(config);
     }
 
     this.environmentVariablesLoadedSignal();
@@ -237,6 +223,28 @@ export class ConfigModule {
     const factoryRef = provider.useFactory;
     const token = getRegistrationToken(factoryRef);
     mergeConfigObject(host, item, token);
+  }
+
+  private static validateConfig(
+    options: ConfigModuleOptions,
+    config: Record<string, any>,
+  ): Record<string, any> {
+    if (options.validate) {
+      return options.validate(config);
+    }
+
+    if (options.validationSchema) {
+      const validationOptions = this.getSchemaValidationOptions(options);
+      const { error, value: validatedConfig } =
+        options.validationSchema.validate(config, validationOptions);
+
+      if (error) {
+        throw new Error(`Config validation error: ${error.message}`);
+      }
+      return validatedConfig;
+    }
+
+    return config;
   }
 
   private static getSchemaValidationOptions(
