@@ -1,6 +1,6 @@
 /**
  * @publicApi
  */
-export function getConfigToken(token: string): string {
-  return `CONFIGURATION(${token})`;
+export function getConfigToken(token: string | symbol): string {
+  return `CONFIGURATION(${token.toString()})`;
 }

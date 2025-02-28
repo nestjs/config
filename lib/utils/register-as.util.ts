@@ -12,11 +12,11 @@ import { getConfigToken } from './get-config-token.util';
  * @publicApi
  */
 export interface ConfigFactoryKeyHost<T = unknown> {
-  KEY: string;
+  KEY: string | symbol;
   asProvider(): {
     imports: [ReturnType<typeof ConfigModule.forFeature>];
     useFactory: (config: T) => T;
-    inject: [string];
+    inject: [string | symbol];
   };
 }
 
@@ -29,7 +29,7 @@ export function registerAs<
   TConfig extends ConfigObject,
   TFactory extends ConfigFactory = ConfigFactory<TConfig>,
 >(
-  token: string,
+  token: string | symbol,
   configFactory: TFactory,
 ): TFactory & ConfigFactoryKeyHost<ReturnType<TFactory>> {
   const defineProperty = (key: string, value: unknown) => {
