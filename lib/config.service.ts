@@ -72,7 +72,7 @@ export class ConfigService<
     @Optional()
     @Inject(CONFIGURATION_TOKEN)
     private readonly internalConfig: Record<string, any> = {},
-  ) { }
+  ) {}
 
   /**
    * Returns a stream of configuration changes.
@@ -142,7 +142,7 @@ export class ConfigService<
     }
     const defaultValue =
       this.isGetOptionsObject(defaultValueOrOptions as Record<string, any>) &&
-        !options
+      !options
         ? undefined
         : defaultValueOrOptions;
 
