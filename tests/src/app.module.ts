@@ -32,7 +32,7 @@ export class AppModule {
     @Optional()
     @Inject(databaseConfig.KEY)
     private readonly dbConfig: ConfigType<typeof databaseConfig>,
-  ) { }
+  ) {}
 
   /**
    * This method is not meant to be used anywhere! It just here for testing
