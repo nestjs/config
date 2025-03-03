@@ -65,7 +65,7 @@ export class ConfigModule {
       ? {}
       : this.loadEnvFile(envFilePaths, options);
 
-    if (!options.ignoreEnvVars || options.validatePredefined) {
+    if (!options.ignoreEnvVars && options.validatePredefined !== false) {
       config = {
         ...config,
         ...process.env,
