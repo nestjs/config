@@ -6,6 +6,7 @@ import { ConfigModule } from '../../lib/config.module';
 import { ConfigService } from '../../lib/config.service';
 import databaseConfig from './database.config';
 import nestedDatabaseConfig from './nested-database.config';
+import symbolDatabaseConfig, { DATABASE_SYMBOL_TOKEN } from './symbol-database.config';
 
 type Config = {
   database: ConfigType<typeof databaseConfig> & {
@@ -175,6 +176,17 @@ export class AppModule {
     };
   }
 
+  static withSymbolLoadedConfigurations(): DynamicModule {
+    return {
+      module: AppModule,
+      imports: [
+        ConfigModule.forRoot({
+          load: [symbolDatabaseConfig],
+        }),
+      ],
+    };
+  }
+
   static withDynamicLoadedConfigurations(
     configFactory: ConfigFactory[],
   ): DynamicModule {
@@ -248,5 +260,9 @@ export class AppModule {
 
   getNestedDatabaseHost() {
     return this.configService.get('database.driver.host');
+  }
+
+  getSymbolDatabaseConfig() {
+    return this.configService.get(DATABASE_SYMBOL_TOKEN)
   }
 }

@@ -43,7 +43,7 @@ type KeyOf<T> = keyof T extends never ? string : keyof T;
  */
 @Injectable()
 export class ConfigService<
-  K = Record<string, unknown>,
+  K = Record<string | symbol, unknown>,
   WasValidated extends boolean = false,
 > {
   private set isCacheEnabled(value: boolean) {
