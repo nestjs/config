@@ -36,7 +36,7 @@ export interface ConfigGetOptions {
   infer: true;
 }
 
-type KeyOf<T> = keyof T extends never ? string : keyof T;
+type KeyOf<T> = keyof T extends never ? string | symbol : keyof T;
 
 /**
  * @publicApi
