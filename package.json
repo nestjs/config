@@ -1,6 +1,6 @@
 {
   "name": "@nestjs/config",
-  "version": "4.0.1",
+  "version": "4.0.2",
   "description": "Nest - modern, fast, powerful node.js web framework (@config)",
   "author": "Kamil Mysliwiec",
   "license": "MIT",
