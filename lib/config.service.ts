@@ -1,6 +1,5 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import { isUndefined } from '@nestjs/common/utils/shared.utils';
-import * as dotenv from 'dotenv';
 import fs from 'fs';
 import get from 'lodash/get';
 import has from 'lodash/has';
@@ -11,7 +10,8 @@ import {
   VALIDATED_ENV_PROPNAME,
 } from './config.constants';
 import { ConfigChangeEvent } from './interfaces/config-change-event.interface';
-import { NoInferType, Path, PathValue } from './types';
+import { NoInferType, Parser, Path, PathValue } from './types';
+import { getDefaultParser } from './utils';
 
 /**
  * `ValidatedResult<WasValidated, T>
@@ -67,6 +67,7 @@ export class ConfigService<
   private _skipProcessEnv = false;
   private _isCacheEnabled = false;
   private envFilePaths: string[] = [];
+  private parser: Parser = getDefaultParser();
 
   constructor(
     @Optional()
@@ -259,6 +260,14 @@ export class ConfigService<
     this.envFilePaths = paths;
   }
 
+  /**
+   * Sets parser from `config.module.ts`.
+   * @param parser
+   */
+  setParser(parser: Parser): void {
+    this.parser = parser;
+  }
+
   private getFromCache<T = any>(
     propertyPath: KeyOf<K>,
     defaultValue?: T,
@@ -315,11 +324,11 @@ export class ConfigService<
   }
 
   private updateInterpolatedEnv(propertyPath: string, value: string): void {
-    let config: ReturnType<typeof dotenv.parse> = {};
+    let config: Record<string, any> = {};
     for (const envFilePath of this.envFilePaths) {
       if (fs.existsSync(envFilePath)) {
         config = Object.assign(
-          dotenv.parse(fs.readFileSync(envFilePath)),
+          this.parser(fs.readFileSync(envFilePath)),
           config,
         );
       }
