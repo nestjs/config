@@ -1,10 +1,10 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import { isUndefined } from '@nestjs/common/utils/shared.utils';
 import * as dotenv from 'dotenv';
+import get from 'es-toolkit/compat/get';
+import has from 'es-toolkit/compat/has';
+import set from 'es-toolkit/compat/set';
 import fs from 'fs';
-import get from 'lodash/get';
-import has from 'lodash/has';
-import set from 'lodash/set';
 import { Subject } from 'rxjs';
 import {
   CONFIGURATION_TOKEN,
