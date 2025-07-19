@@ -94,7 +94,11 @@ export class ConfigService<
    * @param propertyPath
    * @param options
    */
-  get<T = K, P extends Path<T> = any, R = PathValue<T, P>>(
+  get<
+    T = K,
+    P extends Path<T> = any,
+    R extends PathValue<T, P> = PathValue<T, P>,
+  >(
     propertyPath: P,
     options: ConfigGetOptions,
   ): ValidatedResult<WasValidated, R>;
@@ -114,7 +118,11 @@ export class ConfigService<
    * @param defaultValue
    * @param options
    */
-  get<T = K, P extends Path<T> = any, R = PathValue<T, P>>(
+  get<
+    T = K,
+    P extends Path<T> = any,
+    R extends PathValue<T, P> = PathValue<T, P>,
+  >(
     propertyPath: P,
     defaultValue: NoInferType<R>,
     options: ConfigGetOptions,
@@ -171,10 +179,11 @@ export class ConfigService<
    * @param propertyPath
    * @param options
    */
-  getOrThrow<T = K, P extends Path<T> = any, R = PathValue<T, P>>(
-    propertyPath: P,
-    options: ConfigGetOptions,
-  ): Exclude<R, undefined>;
+  getOrThrow<
+    T = K,
+    P extends Path<T> = any,
+    R extends PathValue<T, P> = PathValue<T, P>,
+  >(propertyPath: P, options: ConfigGetOptions): Exclude<R, undefined>;
   /**
    * Get a configuration value (either custom configuration or process environment variable)
    * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
@@ -196,7 +205,11 @@ export class ConfigService<
    * @param defaultValue
    * @param options
    */
-  getOrThrow<T = K, P extends Path<T> = any, R = PathValue<T, P>>(
+  getOrThrow<
+    T = K,
+    P extends Path<T> = any,
+    R extends PathValue<T, P> = PathValue<T, P>,
+  >(
     propertyPath: P,
     defaultValue: NoInferType<R>,
     options: ConfigGetOptions,
