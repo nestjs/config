@@ -1,5 +1,6 @@
 import { DotenvExpandOptions } from 'dotenv-expand';
 import { ConfigFactory } from './config-factory.interface';
+import { ValidationSchema } from './validation-schema.interface';
 
 /**
  * @publicApi
@@ -61,9 +62,9 @@ export interface ConfigModuleOptions<
   skipProcessEnv?: boolean;
 
   /**
-   * Environment variables validation schema (Joi).
+   * Environment variables validation schema (Joi, Zod, or custom ValidationSchema).
    */
-  validationSchema?: any;
+  validationSchema?: ValidationSchema;
 
   /**
    * Schema validation options.
