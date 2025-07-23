@@ -14,7 +14,12 @@ import {
   VALIDATED_ENV_PROPNAME,
 } from './config.constants';
 import { ConfigService } from './config.service';
-import { ConfigFactory, ConfigModuleOptions } from './interfaces';
+import type {
+  ConfigFactory,
+  ConfigModuleOptions,
+  ValidationSchema,
+} from './interfaces';
+import { ValidatorFactory, Validator } from './validators';
 import { ConfigFactoryKeyHost } from './utils';
 import { createConfigProvider } from './utils/create-config-factory.util';
 import { getRegistrationToken } from './utils/get-registration-token.util';
@@ -78,8 +83,13 @@ export class ConfigModule {
       this.assignVariablesToProcess(validatedConfig);
     } else if (options.validationSchema) {
       const validationOptions = this.getSchemaValidationOptions(options);
-      const { error, value: validatedConfig } =
-        options.validationSchema.validate(config, validationOptions);
+
+      // Create validator from schema
+      const validator = this.createValidator(options.validationSchema);
+      const { error, value: validatedConfig } = validator.validate(
+        config,
+        validationOptions,
+      );
 
       if (error) {
         throw new Error(`Config validation error: ${error.message}`);
@@ -252,5 +262,10 @@ export class ConfigModule {
       abortEarly: false,
       allowUnknown: true,
     };
+  }
+
+  private static createValidator(schema: ValidationSchema): Validator {
+    // Use the factory to create the appropriate validator
+    return ValidatorFactory.createValidator(schema);
   }
 }

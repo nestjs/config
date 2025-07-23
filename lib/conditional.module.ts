@@ -37,6 +37,7 @@ export class ConditionalModule {
     options?: { timeout?: number; debug?: boolean },
   ) {
     const { timeout = 5000, debug = true } = options ?? {};
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string
     const moduleName = getInstanceName(module) || module.toString();
 
     const timer = setTimeout(() => {
