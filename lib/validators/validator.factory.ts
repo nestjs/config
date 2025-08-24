@@ -1,6 +1,6 @@
 import { type Schema as JoiSchema } from 'joi';
-import { type ZodType } from 'zod';
 import { type ValidationSchema } from '../interfaces/validation-schema.interface';
+import { type ZodType } from '../types/zod.type';
 import { Validator } from './abstract.validator';
 import { JoiValidator } from './joi.validator';
 import { ZodValidator } from './zod.validator';
