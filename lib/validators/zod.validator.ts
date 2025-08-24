@@ -1,4 +1,4 @@
-import type { ZodType } from 'zod';
+import type { ZodType } from '../types/zod.type';
 import { ValidationOptions } from '../interfaces/validation-schema.interface';
 import { Validator } from './abstract.validator';
 
