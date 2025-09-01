@@ -1,6 +1,4 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
-
-import { ValidationOptions } from '../interfaces/validation-schema.interface';
 import { Validator } from './abstract.validator';
 
 /**
@@ -8,18 +6,14 @@ import { Validator } from './abstract.validator';
  * @publicApi
  */
 export class StandardValidator extends Validator {
-  constructor(
-    private schema: StandardSchemaV1<any, any>,
-    private _options?: ValidationOptions,
-  ) {
+  constructor(private schema: StandardSchemaV1<any, any>) {
     super();
   }
 
-  validate(
-    config: StandardSchemaV1.Props<unknown, Record<string, any>>,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    _options?: ValidationOptions,
-  ): { error?: Error; value: Record<string, any> } {
+  validate(config: StandardSchemaV1.Props<unknown, Record<string, any>>): {
+    error?: Error;
+    value: Record<string, any>;
+  } {
     const result = this.schema['~standard'].validate(config);
     if (result instanceof Promise) {
       throw new Error('Expected sync result');
