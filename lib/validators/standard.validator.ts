@@ -3,6 +3,7 @@ import { Validator } from './abstract.validator';
 
 /**
  * Standard Schema adapter
+ * @see https://standardschema.dev/
  * @publicApi
  */
 export class StandardValidator extends Validator {

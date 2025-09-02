@@ -22,9 +22,9 @@ export class ValidatorFactory {
   }
 
   /**
-   * Creates a Zod validator
-   * @param schema Zod schema
-   * @returns ZodValidator instance
+   * Creates a standard schema validator
+   * @param schema Standard schema
+   * @returns StandardValidator instance
    */
   static createStandardValidator(schema: StandardSchemaV1): Validator {
     return new StandardValidator(schema);

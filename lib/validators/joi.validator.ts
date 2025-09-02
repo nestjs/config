@@ -1,20 +1,12 @@
-import {
+import type {
   ValidationOptions,
   JoiSchema,
 } from '../interfaces/validation-schema.interface';
 import { Validator } from './abstract.validator';
 
 /**
- * Joi validation schema adapter with validate method
- *
- * If you need parse method instead, implement the parse method:
- *
- * parse(config: Record<string, any>, options?: ValidationOptions): Record<string, any> {
- *   const result = this.schema.validate(config, { ...this.options, ...options });
- *   if (result.error) throw result.error;
- *   return result.value;
- * }
- *
+ * Joi validation schema adapter
+ * @see https://joi.dev/api
  * @publicApi
  */
 export class JoiValidator extends Validator {

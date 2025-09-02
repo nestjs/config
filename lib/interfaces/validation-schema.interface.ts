@@ -1,12 +1,21 @@
 import { type StandardSchemaV1 } from '@standard-schema/spec';
 import { type Schema as JoiSchema } from 'joi';
 
+/**
+ * @publicApi
+ */
 export { StandardSchemaV1 };
+
+/**
+ * @publicApi
+ */
 export { JoiSchema };
+
 /**
  * @publicApi
  */
 export type ValidationSchema = JoiSchema | StandardSchemaV1;
+
 /**
  * @publicApi
  */

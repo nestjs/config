@@ -62,7 +62,7 @@ export interface ConfigModuleOptions<
   skipProcessEnv?: boolean;
 
   /**
-   * Environment variables validation schema (Joi, Zod, or custom ValidationSchema).
+   * Environment variables validation schema (Joi, Standard Schema).
    */
   validationSchema?: ValidationSchema;
 
