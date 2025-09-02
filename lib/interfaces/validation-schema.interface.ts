@@ -1,31 +1,12 @@
+import { type StandardSchemaV1 } from '@standard-schema/spec';
+import { type Schema as JoiSchema } from 'joi';
+
+export { StandardSchemaV1 };
+export { JoiSchema };
 /**
  * @publicApi
  */
-export interface ValidationSchema {
-  /**
-   * Validates the given configuration object
-   * @param config The configuration object to validate
-   * @param options Optional validation options
-   * @returns An object containing error (if any) and validated value
-   */
-  validate?(
-    config: Record<string, any>,
-    options?: Record<string, any>,
-  ): { error?: Error; value: Record<string, any> };
-
-  /**
-   * Parses and validates the given configuration object
-   * @param config The configuration object to parse and validate
-   * @param options Optional validation options
-   * @returns The validated configuration object
-   * @throws Error if validation fails
-   */
-  parse?(
-    config: Record<string, any>,
-    options?: Record<string, any>,
-  ): Record<string, any>;
-}
-
+export type ValidationSchema = JoiSchema | StandardSchemaV1;
 /**
  * @publicApi
  */

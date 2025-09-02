@@ -1,9 +1,7 @@
-import { ValidationSchema } from '../interfaces/validation-schema.interface';
-
 /**
  * @publicApi
  */
-export abstract class Validator implements ValidationSchema {
+export abstract class Validator {
   validate(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     _config: Record<string, any>,
@@ -15,7 +13,7 @@ export abstract class Validator implements ValidationSchema {
 
   succeed(result: unknown): {
     error?: Error;
-    value?: Record<string, any>;
+    value: Record<string, any>;
   } {
     return {
       value: result as Record<string, any>,
@@ -31,7 +29,7 @@ export abstract class Validator implements ValidationSchema {
     value: Record<string, any>;
   } {
     return {
-      error: error instanceof Error ? error : new Error(String(error)),
+      error,
       value: config,
     };
   }

@@ -1,9 +1,11 @@
-import { type Schema as JoiSchema } from 'joi';
-import { type ValidationSchema } from '../interfaces/validation-schema.interface';
-import { type ZodType } from '../types/zod.type';
+import type {
+  StandardSchemaV1,
+  ValidationSchema,
+  JoiSchema,
+} from '../interfaces/validation-schema.interface';
 import { Validator } from './abstract.validator';
 import { JoiValidator } from './joi.validator';
-import { ZodValidator } from './zod.validator';
+import { StandardValidator } from './standard.validator';
 
 /**
  * Factory for creating validation schemas
@@ -24,14 +26,14 @@ export class ValidatorFactory {
    * @param schema Zod schema
    * @returns ZodValidator instance
    */
-  static createZodValidator(schema: ZodType): Validator {
-    return new ZodValidator(schema);
+  static createStandardValidator(schema: StandardSchemaV1): Validator {
+    return new StandardValidator(schema);
   }
 
   /**
    * Creates a validator from a schema object
    * Automatically detects the schema type based on the schema object
-   * @param schema Schema object (Joi or Zod)
+   * @param schema Schema object (Joi or a schema that conforms to @standard-schema/spec)
    * @returns ValidationSchema instance
    */
   static createValidator(schema: ValidationSchema): Validator {
@@ -40,28 +42,11 @@ export class ValidatorFactory {
       return schema;
     }
 
-    // Check if it's a Joi schema first
-    if (
-      schema &&
-      typeof schema === 'object' &&
-      'validate' in schema &&
-      typeof schema.validate === 'function'
-    ) {
-      return this.createJoiValidator(schema as JoiSchema);
+    // Check if it's a standard schema first
+    if (schema && typeof schema === 'object' && '~standard' in schema) {
+      return this.createStandardValidator(schema as StandardSchemaV1);
     }
 
-    // Check if it's a Zod schema
-    if (
-      schema &&
-      typeof schema === 'object' &&
-      'parse' in schema &&
-      typeof schema.parse === 'function'
-    ) {
-      return this.createZodValidator(schema as ZodType);
-    }
-
-    throw new Error(
-      'Unsupported schema type. Please use Joi or Zod schema or implement the validator directly.',
-    );
+    return this.createJoiValidator(schema);
   }
 }

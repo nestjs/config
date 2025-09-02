@@ -1,5 +1,7 @@
-import type { Schema as JoiSchema, ValidationResult } from 'joi';
-import { ValidationOptions } from '../interfaces/validation-schema.interface';
+import {
+  ValidationOptions,
+  JoiSchema,
+} from '../interfaces/validation-schema.interface';
 import { Validator } from './abstract.validator';
 
 /**
@@ -30,21 +32,11 @@ export class JoiValidator extends Validator {
       ...options,
     };
 
-    try {
-      const result = this.schema.validate(config, validationOptions);
-      return this.succeed(result);
-    } catch (error) {
+    const { error, value } = this.schema.validate(config, validationOptions);
+    if (error) {
       return this.failed(error, config);
     }
-  }
 
-  succeed(result: ValidationResult): {
-    error?: Error;
-    value: Record<string, any>;
-  } {
-    return {
-      error: result.error || undefined,
-      value: result.value,
-    };
+    return this.succeed(value);
   }
 }
