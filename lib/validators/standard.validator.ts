@@ -11,7 +11,7 @@ export class StandardValidator extends Validator {
     super();
   }
 
-  validate(config: StandardSchemaV1.Props<unknown, Record<string, any>>): {
+  validate(config: StandardSchemaV1): {
     error?: Error;
     value: Record<string, any>;
   } {

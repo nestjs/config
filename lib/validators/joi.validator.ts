@@ -16,14 +16,8 @@ export class JoiValidator extends Validator {
 
   validate(
     config: Record<string, any>,
-    options?: ValidationOptions,
+    validationOptions?: ValidationOptions,
   ): { error?: Error; value: Record<string, any> } {
-    const validationOptions = {
-      abortEarly: false,
-      allowUnknown: true,
-      ...options,
-    };
-
     const { error, value } = this.schema.validate(config, validationOptions);
     if (error) {
       return this.failed(error, config);
