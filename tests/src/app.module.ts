@@ -1,5 +1,8 @@
 import { DynamicModule, Inject, Module, Optional } from '@nestjs/common';
 import Joi from 'joi';
+import { z as zv3 } from 'zod/v3';
+import { z as zv4 } from 'zod/v4';
+import * as zv4Mini from 'zod/mini';
 import { join } from 'path';
 import { ConfigFactory, ConfigType } from '../../lib';
 import { ConfigModule } from '../../lib/config.module';
@@ -213,6 +216,63 @@ export class AppModule {
           validationSchema: Joi.object({
             PORT: Joi.number().required(),
             DATABASE_NAME: Joi.string().required(),
+          }),
+        }),
+      ],
+    };
+  }
+
+  static withZodV3SchemaValidation(
+    envFilePath?: string,
+    ignoreEnvFile?: boolean,
+  ): DynamicModule {
+    return {
+      module: AppModule,
+      imports: [
+        ConfigModule.forRoot({
+          envFilePath,
+          ignoreEnvFile,
+          validationSchema: zv3.object({
+            PORT: zv3.string().transform((val: string) => parseInt(val, 10)),
+            DATABASE_NAME: zv3.string(),
+          }),
+        }),
+      ],
+    };
+  }
+
+  static withZodV4SchemaValidation(
+    envFilePath?: string,
+    ignoreEnvFile?: boolean,
+  ): DynamicModule {
+    return {
+      module: AppModule,
+      imports: [
+        ConfigModule.forRoot({
+          envFilePath,
+          ignoreEnvFile,
+          validationSchema: zv4.object({
+            PORT: zv4.string().transform((val: string) => parseInt(val, 10)),
+            DATABASE_NAME: zv4.string(),
+          }),
+        }),
+      ],
+    };
+  }
+
+  static withZodV4MiniSchemaValidation(
+    envFilePath?: string,
+    ignoreEnvFile?: boolean,
+  ): DynamicModule {
+    return {
+      module: AppModule,
+      imports: [
+        ConfigModule.forRoot({
+          envFilePath,
+          ignoreEnvFile,
+          validationSchema: zv4Mini.object({
+            PORT: zv4Mini.coerce.number(),
+            DATABASE_NAME: zv4Mini.string(),
           }),
         }),
       ],
