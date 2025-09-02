@@ -1,5 +1,6 @@
 import { DynamicModule, Inject, Module, Optional } from '@nestjs/common';
 import Joi from 'joi';
+import { z } from 'zod';
 import { join } from 'path';
 import { ConfigFactory, ConfigType } from '../../lib';
 import { ConfigModule } from '../../lib/config.module';
@@ -213,6 +214,25 @@ export class AppModule {
           validationSchema: Joi.object({
             PORT: Joi.number().required(),
             DATABASE_NAME: Joi.string().required(),
+          }),
+        }),
+      ],
+    };
+  }
+
+  static withZodSchemaValidation(
+    envFilePath?: string,
+    ignoreEnvFile?: boolean,
+  ): DynamicModule {
+    return {
+      module: AppModule,
+      imports: [
+        ConfigModule.forRoot({
+          envFilePath,
+          ignoreEnvFile,
+          validationSchema: z.object({
+            PORT: z.string().transform((val: string) => parseInt(val, 10)),
+            DATABASE_NAME: z.string(),
           }),
         }),
       ],
