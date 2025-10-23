@@ -33,7 +33,7 @@
     "@nestjs/testing": "11.1.6",
     "@types/jest": "30.0.0",
     "@types/lodash": "4.17.20",
-    "@types/node": "22.18.11",
+    "@types/node": "22.18.12",
     "eslint": "9.38.0",
     "eslint-config-prettier": "10.1.8",
     "eslint-plugin-prettier": "5.5.4",
