@@ -5,6 +5,7 @@ import * as dotenv from 'dotenv';
 import { DotenvExpandOptions, expand } from 'dotenv-expand';
 import * as fs from 'fs';
 import { resolve } from 'path';
+import { instanceToPlain, plainToInstance } from 'class-transformer';
 import { ConfigHostModule } from './config-host.module';
 import {
   CONFIGURATION_LOADER,
@@ -19,6 +20,7 @@ import { ConfigFactoryKeyHost } from './utils';
 import { createConfigProvider } from './utils/create-config-factory.util';
 import { getRegistrationToken } from './utils/get-registration-token.util';
 import { mergeConfigObject } from './utils/merge-configs.util';
+import { validate, ValidationError } from 'class-validator';
 
 /**
  * @publicApi
@@ -53,8 +55,8 @@ export class ConfigModule {
    * Additionally, registers custom configurations globally.
    * @param options
    */
-  static async forRoot<ValidationOptions extends Record<string, any>>(
-    options: ConfigModuleOptions<ValidationOptions> = {},
+  static async forRoot(
+    options: ConfigModuleOptions = {},
   ): Promise<DynamicModule> {
     const envFilePaths = Array.isArray(options.envFilePath)
       ? options.envFilePath
@@ -86,6 +88,23 @@ export class ConfigModule {
       }
       validatedEnvConfig = validatedConfig;
       this.assignVariablesToProcess(validatedConfig);
+    } else if (options.validationClass) {
+      const transformedConfig = plainToInstance(
+        options.validationClass,
+        config,
+        { enableImplicitConversion: true },
+      );
+      const errors = this.flattenValidationErrors(
+        await validate(transformedConfig),
+      );
+
+      if (errors.length) {
+        throw new Error(
+          `Config validation error: \n -> ${errors.join('\n -> ')}`,
+        );
+      }
+      validatedEnvConfig = transformedConfig;
+      this.assignVariablesToProcess(instanceToPlain(transformedConfig));
     } else {
       this.assignVariablesToProcess(config);
     }
@@ -252,5 +271,30 @@ export class ConfigModule {
       abortEarly: false,
       allowUnknown: true,
     };
+  }
+
+  private static flattenValidationErrors(errors: ValidationError[]): string[] {
+    const messages: string[] = [];
+
+    const extractErrors = (error: ValidationError, parentPath = ''): void => {
+      const currentPath = parentPath
+        ? `${parentPath}.${error.property}`
+        : error.property;
+
+      if (error.constraints) {
+        Object.values(error.constraints).forEach(constraint => {
+          messages.push(`${currentPath}: ${constraint}`);
+        });
+      }
+
+      if (error.children && error.children.length > 0) {
+        error.children.forEach(childError =>
+          extractErrors(childError, currentPath),
+        );
+      }
+    };
+
+    errors.forEach(error => extractErrors(error));
+    return messages;
   }
 }

@@ -1,5 +1,6 @@
 import { DotenvExpandOptions } from 'dotenv-expand';
 import { ConfigFactory } from './config-factory.interface';
+import { Type } from '@nestjs/common';
 
 /**
  * @publicApi
@@ -64,6 +65,11 @@ export interface ConfigModuleOptions<
    * Environment variables validation schema (Joi).
    */
   validationSchema?: any;
+
+  /**
+   * Environment variables validation schema (Use class-validator and class-transform)
+   */
+  validationClass?: Type<ValidationOptions>;
 
   /**
    * Schema validation options.

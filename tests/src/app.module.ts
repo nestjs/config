@@ -4,6 +4,7 @@ import { join } from 'path';
 import { ConfigFactory, ConfigType } from '../../lib';
 import { ConfigModule } from '../../lib/config.module';
 import { ConfigService } from '../../lib/config.service';
+import { ValidationClassDTO } from './validation.dto'
 import databaseConfig from './database.config';
 import nestedDatabaseConfig from './nested-database.config';
 import symbolDatabaseConfig, { DATABASE_SYMBOL_TOKEN } from './symbol-database.config';
@@ -214,6 +215,22 @@ export class AppModule {
             PORT: Joi.number().required(),
             DATABASE_NAME: Joi.string().required(),
           }),
+        }),
+      ],
+    };
+  }
+
+  static withClassValidation(
+    envFilePath?: string,
+    ignoreEnvFile?: boolean,
+  ): DynamicModule {
+    return {
+      module: AppModule,
+      imports: [
+        ConfigModule.forRoot({
+          envFilePath,
+          ignoreEnvFile,
+          validationClass: ValidationClassDTO,
         }),
       ],
     };
