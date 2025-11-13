@@ -55,8 +55,8 @@ export class ConfigModule {
    * Additionally, registers custom configurations globally.
    * @param options
    */
-  static async forRoot(
-    options: ConfigModuleOptions = {},
+  static async forRoot<ValidationOptions extends Record<string, any>>(
+    options: ConfigModuleOptions<ValidationOptions> = {},
   ): Promise<DynamicModule> {
     const envFilePaths = Array.isArray(options.envFilePath)
       ? options.envFilePath

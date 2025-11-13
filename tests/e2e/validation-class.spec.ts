@@ -20,7 +20,7 @@ describe('Class validation', () => {
         'Config validation error:' +
           [
             ' ',
-            'PORT: PORT must not be greater than 6666',
+            'PORT: PORT must not be greater than 65535',
             'PORT: PORT must not be less than 1',
             'PORT: PORT must be a number conforming to the specified constraints',
             'DATABASE_NAME: DATABASE_NAME must be a string',
@@ -42,7 +42,7 @@ describe('Class validation', () => {
         'Config validation error:' +
           [
             ' ',
-            'PORT: PORT must not be greater than 6666',
+            'PORT: PORT must not be greater than 65535',
             'PORT: PORT must not be less than 1',
             'PORT: PORT must be a number conforming to the specified constraints',
             'DATABASE_NAME: DATABASE_NAME must be a string',
