@@ -94,10 +94,10 @@ export class ConfigService<
    * @param propertyPath
    * @param options
    */
-  get<T = K, P extends Path<T> = any, R = PathValue<T, P>>(
+  get<T = K, P extends Path<T> = any>(
     propertyPath: P,
     options: ConfigGetOptions,
-  ): ValidatedResult<WasValidated, R>;
+  ): ValidatedResult<WasValidated, PathValue<T, P>>;
   /**
    * Get a configuration value (either custom configuration or process environment variable)
    * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
@@ -114,11 +114,11 @@ export class ConfigService<
    * @param defaultValue
    * @param options
    */
-  get<T = K, P extends Path<T> = any, R = PathValue<T, P>>(
+  get<T = K, P extends Path<T> = any>(
     propertyPath: P,
-    defaultValue: NoInferType<R>,
+    defaultValue: NoInferType<PathValue<T, P>>,
     options: ConfigGetOptions,
-  ): Exclude<R, undefined>;
+  ): Exclude<PathValue<T, P>, undefined>;
   /**
    * Get a configuration value (either custom configuration or process environment variable)
    * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
@@ -171,10 +171,10 @@ export class ConfigService<
    * @param propertyPath
    * @param options
    */
-  getOrThrow<T = K, P extends Path<T> = any, R = PathValue<T, P>>(
+  getOrThrow<T = K, P extends Path<T> = any>(
     propertyPath: P,
     options: ConfigGetOptions,
-  ): Exclude<R, undefined>;
+  ): Exclude<PathValue<T, P>, undefined>;
   /**
    * Get a configuration value (either custom configuration or process environment variable)
    * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
@@ -196,11 +196,11 @@ export class ConfigService<
    * @param defaultValue
    * @param options
    */
-  getOrThrow<T = K, P extends Path<T> = any, R = PathValue<T, P>>(
+  getOrThrow<T = K, P extends Path<T> = any>(
     propertyPath: P,
-    defaultValue: NoInferType<R>,
+    defaultValue: NoInferType<PathValue<T, P>>,
     options: ConfigGetOptions,
-  ): Exclude<R, undefined>;
+  ): Exclude<PathValue<T, P>, undefined>;
   /**
    * Get a configuration value (either custom configuration or process environment variable)
    * based on property path (you can use dot notation to traverse nested object, e.g. "database.host").
