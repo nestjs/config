@@ -11,11 +11,14 @@ export class StandardValidator extends Validator {
     super();
   }
 
-  validate(config: StandardSchemaV1): {
+  validate(
+    config: StandardSchemaV1,
+    options?: StandardSchemaV1.Options,
+  ): {
     error?: Error;
     value: Record<string, any>;
   } {
-    const result = this.schema['~standard'].validate(config);
+    const result = this.schema['~standard'].validate(config, options);
     if (result instanceof Promise) {
       throw new Error('Expected sync result');
     }
