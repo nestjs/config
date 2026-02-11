@@ -14,16 +14,12 @@ import {
   VALIDATED_ENV_PROPNAME,
 } from './config.constants';
 import { ConfigService } from './config.service';
-import type {
-  ConfigFactory,
-  ConfigModuleOptions,
-  ValidationSchema,
-} from './interfaces';
-import { ValidatorFactory, Validator } from './validators';
+import type { ConfigFactory, ConfigModuleOptions } from './interfaces';
 import { ConfigFactoryKeyHost } from './utils';
 import { createConfigProvider } from './utils/create-config-factory.util';
 import { getRegistrationToken } from './utils/get-registration-token.util';
 import { mergeConfigObject } from './utils/merge-configs.util';
+import { validateWithStandardSchema } from './utils/validate-with-schema.util';
 
 /**
  * @publicApi
@@ -58,8 +54,8 @@ export class ConfigModule {
    * Additionally, registers custom configurations globally.
    * @param options
    */
-  static async forRoot<ValidationOptions extends Record<string, any>>(
-    options: ConfigModuleOptions<ValidationOptions> = {},
+  static async forRoot(
+    options: ConfigModuleOptions = {},
   ): Promise<DynamicModule> {
     const envFilePaths = Array.isArray(options.envFilePath)
       ? options.envFilePath
@@ -82,13 +78,10 @@ export class ConfigModule {
       validatedEnvConfig = validatedConfig;
       this.assignVariablesToProcess(validatedConfig);
     } else if (options.validationSchema) {
-      const validationOptions = this.getSchemaValidationOptions(options);
-
-      // Create validator from schema
-      const validator = this.createValidator(options.validationSchema);
-      const { error, value: validatedConfig } = validator.validate(
+      const { error, value: validatedConfig } = validateWithStandardSchema(
+        options.validationSchema,
         config,
-        validationOptions,
+        options.validationOptions,
       );
 
       if (error) {
@@ -101,7 +94,10 @@ export class ConfigModule {
     }
 
     const isConfigToLoad = options.load && options.load.length;
-    const configFactory = await Promise.all(options.load || []);
+    const configFactory = await Promise.all(
+      (options.load || []).map(load => Promise.resolve(load)),
+    );
+
     const providers = configFactory
       .map(factory =>
         createConfigProvider(factory as ConfigFactory & ConfigFactoryKeyHost),
@@ -145,20 +141,20 @@ export class ConfigModule {
       global: options.isGlobal,
       providers: isConfigToLoad
         ? [
-            ...providers,
-            {
-              provide: CONFIGURATION_LOADER,
-              useFactory: (
-                host: Record<string, any>,
-                ...configurations: Record<string, any>[]
-              ) => {
-                configurations.forEach((item, index) =>
-                  this.mergePartial(host, item, providers[index]),
-                );
-              },
-              inject: [CONFIGURATION_TOKEN, ...configProviderTokens],
+          ...providers,
+          {
+            provide: CONFIGURATION_LOADER,
+            useFactory: (
+              host: Record<string, any>,
+              ...configurations: Record<string, any>[]
+            ) => {
+              configurations.forEach((item, index) =>
+                this.mergePartial(host, item, providers[index]),
+              );
             },
-          ]
+            inject: [CONFIGURATION_TOKEN, ...configProviderTokens],
+          },
+        ]
         : providers,
       exports: [ConfigService, ...configProviderTokens],
     };
@@ -247,25 +243,5 @@ export class ConfigModule {
     const factoryRef = provider.useFactory;
     const token = getRegistrationToken(factoryRef);
     mergeConfigObject(host, item, token);
-  }
-
-  private static getSchemaValidationOptions(
-    options: ConfigModuleOptions,
-  ): Record<string, any> {
-    if (options.validationOptions) {
-      if (typeof options.validationOptions.allowUnknown === 'undefined') {
-        options.validationOptions.allowUnknown = true;
-      }
-      return options.validationOptions;
-    }
-    return {
-      abortEarly: false,
-      allowUnknown: true,
-    };
-  }
-
-  private static createValidator(schema: ValidationSchema): Validator {
-    // Use the factory to create the appropriate validator
-    return ValidatorFactory.createValidator(schema);
   }
 }

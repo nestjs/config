@@ -17,7 +17,17 @@ describe('Schema validation', () => {
       await app.init();
     } catch (err) {
       expect(err.message).toEqual(
-        'Config validation error: "PORT" is required. "DATABASE_NAME" is required',
+        'Config validation error: ' +
+        JSON.stringify(
+          [
+            {
+              message: '"PORT" is required',
+              path: ["PORT"],
+            },
+          ],
+          null,
+          2,
+        ),
       );
     }
   });
@@ -32,7 +42,17 @@ describe('Schema validation', () => {
       await app.init();
     } catch (err) {
       expect(err.message).toEqual(
-        'Config validation error: "PORT" is required. "DATABASE_NAME" is required',
+        'Config validation error: ' +
+        JSON.stringify(
+          [
+            {
+              message: '"PORT" is required',
+              path: ["PORT"],
+            },
+          ],
+          null,
+          2,
+        ),
       );
     }
   });

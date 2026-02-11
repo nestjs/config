@@ -39,7 +39,7 @@ export class AppModule {
 
   /**
    * This method is not meant to be used anywhere! It just here for testing
-   * types defintions while runnig test suites (in some sort).
+   * types definitions while runnnig test suites (in some sort).
    * If some typings doesn't follows the requirements, Jest will fail due to
    * TypeScript errors.
    */
@@ -217,6 +217,12 @@ export class AppModule {
             PORT: Joi.number().required(),
             DATABASE_NAME: Joi.string().required(),
           }),
+          validationOptions: {
+            libraryOptions: {
+              abortEarly: false,
+              allowUnknown: true,
+            },
+          }
         }),
       ],
     };
