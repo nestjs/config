@@ -41,7 +41,7 @@
     "husky": "9.1.7",
     "jest": "30.2.0",
     "joi": "18.0.2",
-    "lint-staged": "16.2.7",
+    "lint-staged": "16.3.0",
     "prettier": "3.8.1",
     "reflect-metadata": "0.2.2",
     "release-it": "19.2.4",
