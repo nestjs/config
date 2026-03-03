@@ -23,8 +23,8 @@
     "lodash": "4.17.23"
   },
   "devDependencies": {
-    "@commitlint/cli": "20.4.2",
-    "@commitlint/config-angular": "20.4.2",
+    "@commitlint/cli": "20.4.3",
+    "@commitlint/config-angular": "20.4.3",
     "@eslint/eslintrc": "3.3.4",
     "@eslint/js": "10.0.1",
     "@nestjs/common": "11.1.15",
