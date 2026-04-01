@@ -20,7 +20,7 @@
   "dependencies": {
     "dotenv": "17.2.3",
     "dotenv-expand": "12.0.3",
-    "lodash": "4.17.23"
+    "lodash": "4.18.1"
   },
   "devDependencies": {
     "@commitlint/cli": "20.5.0",
