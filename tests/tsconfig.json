@@ -2,7 +2,8 @@
   "extends": "../tsconfig.json",
   "compilerOptions": {
     "rootDir": "../",
-    "strictNullChecks": true
+    "strictNullChecks": true,
+    "types": ["node", "vitest/globals"]
   },
   "include": [
     "**/*.spec.ts",
