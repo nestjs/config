@@ -35,7 +35,7 @@
     "joi": "18.1.2",
     "lint-staged": "16.4.0",
     "oxlint": "1.60.0",
-    "prettier": "3.8.2",
+    "prettier": "3.8.3",
     "reflect-metadata": "0.2.2",
     "release-it": "19.2.4",
     "rimraf": "6.1.3",
