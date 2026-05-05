@@ -1,4 +1,4 @@
-import { registerAs } from '../../lib/utils';
+import { registerAs } from '../../lib/utils/index.js';
 
 export default registerAs('database', () => ({
   host: 'host',

@@ -1,7 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { ConfigService } from '../../lib';
-import { AppModule } from '../src/app.module';
+import { ConfigService } from '../../lib/index.js';
+import { AppModule } from '../src/app.module.js';
 
 describe('Cache', () => {
   let app: INestApplication;

@@ -1,12 +1,12 @@
-import { ConfigModule } from '..';
+import { ConfigModule } from '../index.js';
 import {
   AS_PROVIDER_METHOD_KEY,
   PARTIAL_CONFIGURATION_KEY,
   PARTIAL_CONFIGURATION_PROPNAME,
-} from '../config.constants';
-import { ConfigFactory } from '../interfaces';
-import { ConfigObject } from '../types';
-import { getConfigToken } from './get-config-token.util';
+} from '../config.constants.js';
+import { ConfigFactory } from '../interfaces/index.js';
+import { ConfigObject } from '../types/index.js';
+import { getConfigToken } from './get-config-token.util.js';
 
 /**
  * @publicApi

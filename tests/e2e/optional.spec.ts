@@ -1,6 +1,6 @@
 import { Test } from '@nestjs/testing';
-import { AppModule } from '../src/app.module';
-import { ConfigService } from '../../lib';
+import { AppModule } from '../src/app.module.js';
+import { ConfigService } from '../../lib/index.js';
 
 describe('Optional environment variables', () => {
   it('should return undefined for optional variables', async () => {

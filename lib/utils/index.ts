@@ -1,3 +1,3 @@
-export * from './register-as.util';
-export * from './get-config-token.util';
-export * from './get-default-parser.util';
+export * from './register-as.util.js';
+export * from './get-config-token.util.js';
+export * from './get-default-parser.util.js';

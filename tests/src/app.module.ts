@@ -3,13 +3,16 @@ import Joi from 'joi';
 import { z as zv3 } from 'zod/v3';
 import { z as zv4 } from 'zod/v4';
 import * as zv4Mini from 'zod/mini';
+import { fileURLToPath } from 'node:url';
 import { join } from 'path';
-import { ConfigFactory, ConfigType } from '../../lib';
-import { ConfigModule } from '../../lib/config.module';
-import { ConfigService } from '../../lib/config.service';
-import databaseConfig from './database.config';
-import nestedDatabaseConfig from './nested-database.config';
-import symbolDatabaseConfig, { DATABASE_SYMBOL_TOKEN } from './symbol-database.config';
+import { ConfigFactory, ConfigType } from '../../lib/index.js';
+import { ConfigModule } from '../../lib/config.module.js';
+import { ConfigService } from '../../lib/config.service.js';
+import databaseConfig from './database.config.js';
+import nestedDatabaseConfig from './nested-database.config.js';
+import symbolDatabaseConfig, { DATABASE_SYMBOL_TOKEN } from './symbol-database.config.js';
+
+const testSrcDir = fileURLToPath(new URL('.', import.meta.url));
 
 type Config = {
   database: ConfigType<typeof databaseConfig> & {
@@ -65,7 +68,7 @@ export class AppModule {
       imports: [
         ConfigModule.forRoot({
           cache: true,
-          envFilePath: join(__dirname, '.env'),
+          envFilePath: join(testSrcDir, '.env'),
           load: [databaseConfig],
         }),
       ],
@@ -77,7 +80,7 @@ export class AppModule {
       module: AppModule,
       imports: [
         ConfigModule.forRoot({
-          envFilePath: join(__dirname, '.env'),
+          envFilePath: join(testSrcDir, '.env'),
           load: [() => ({ obj: { test: 'true', test2: undefined } })],
           skipProcessEnv: true,
         }),
@@ -90,7 +93,7 @@ export class AppModule {
       module: AppModule,
       imports: [
         ConfigModule.forRoot({
-          envFilePath: join(__dirname, '.env'),
+          envFilePath: join(testSrcDir, '.env'),
           load: [() => ({ obj: { test: 'true', test2: undefined } })],
         }),
       ],
@@ -102,7 +105,7 @@ export class AppModule {
       module: AppModule,
       imports: [
         ConfigModule.forRoot({
-          envFilePath: join(__dirname, '.env.expanded'),
+          envFilePath: join(testSrcDir, '.env.expanded'),
           expandVariables: true,
         }),
       ],
@@ -114,7 +117,7 @@ export class AppModule {
       module: AppModule,
       imports: [
         ConfigModule.forRoot({
-          envFilePath: join(__dirname, '.env.expanded'),
+          envFilePath: join(testSrcDir, '.env.expanded'),
           expandVariables: { processEnv: {} },
         }),
       ],
@@ -128,7 +131,7 @@ export class AppModule {
       module: AppModule,
       imports: [
         ConfigModule.forRoot({
-          envFilePath: join(__dirname, '.env'),
+          envFilePath: join(testSrcDir, '.env'),
           load: configFactory,
         }),
       ],
@@ -140,7 +143,7 @@ export class AppModule {
       module: AppModule,
       imports: [
         ConfigModule.forRoot({
-          envFilePath: [join(__dirname, '.env.local'), join(__dirname, '.env')],
+          envFilePath: [join(testSrcDir, '.env.local'), join(testSrcDir, '.env')],
         }),
       ],
     };
