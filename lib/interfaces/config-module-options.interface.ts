@@ -1,4 +1,5 @@
 import { DotenvExpandOptions } from 'dotenv-expand';
+import { Parser } from '../types';
 import { ConfigFactory } from './config-factory.interface';
 
 /**
@@ -90,4 +91,9 @@ export interface ConfigModuleOptions<
    * @default false
    */
   override?: boolean;
+
+  /**
+   * A function used to parse a buffer into a configuration object.
+   */
+  parser?: Parser;
 }
