@@ -66,16 +66,15 @@ export class ConfigModule {
       : this.loadEnvFile(envFilePaths, options);
 
     if (!options.ignoreEnvVars && options.validatePredefined !== false) {
-      config = {
-        ...config,
-        ...process.env,
-      };
+      config = options.override
+        ? { ...process.env, ...config }
+        : { ...config, ...process.env };
     }
 
     if (options.validate) {
       const validatedConfig = options.validate(config);
       validatedEnvConfig = validatedConfig;
-      this.assignVariablesToProcess(validatedConfig);
+      this.assignVariablesToProcess(validatedConfig, options.override);
     } else if (options.validationSchema) {
       const validationOptions = this.getSchemaValidationOptions(options);
       const { error, value: validatedConfig } =
@@ -85,9 +84,9 @@ export class ConfigModule {
         throw new Error(`Config validation error: ${error.message}`);
       }
       validatedEnvConfig = validatedConfig;
-      this.assignVariablesToProcess(validatedConfig);
+      this.assignVariablesToProcess(validatedConfig, options.override);
     } else {
-      this.assignVariablesToProcess(config);
+      this.assignVariablesToProcess(config, options.override);
     }
 
     const isConfigToLoad = options.load && options.load.length;
@@ -214,11 +213,15 @@ export class ConfigModule {
 
   private static assignVariablesToProcess(
     config: Record<string, unknown>,
+    override?: boolean,
   ): void {
     if (!isObject(config)) {
       return;
     }
-    const keys = Object.keys(config).filter(key => !(key in process.env));
+    const keys = override
+      ? Object.keys(config)
+      : Object.keys(config).filter(key => !(key in process.env));
+
     keys.forEach(key => {
       const value = config[key];
       if (typeof value === 'string') {

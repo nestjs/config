@@ -84,4 +84,10 @@ export interface ConfigModuleOptions<
    * this property is set to true.
    */
   expandVariables?: boolean | DotenvExpandOptions;
+
+  /**
+   * If "true", existing environment variables will be overridden by values from the .env file.
+   * @default false
+   */
+  override?: boolean;
 }
