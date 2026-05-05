@@ -29,6 +29,7 @@
     "@nestjs/core": "11.1.19",
     "@nestjs/platform-express": "11.1.19",
     "@nestjs/testing": "11.1.19",
+    "@standard-schema/spec": "1.1.0",
     "@types/lodash": "4.17.24",
     "@types/node": "24.12.2",
     "husky": "9.1.7",
@@ -41,8 +42,9 @@
     "rimraf": "6.1.3",
     "rxjs": "7.8.2",
     "typescript": "6.0.3",
-    "vite": "^8.0.8",
-    "vitest": "4.1.5"
+    "vite": "8.0.8",
+    "vitest": "4.1.5",
+    "zod": "4.1.5"
   },
   "peerDependencies": {
     "@nestjs/common": "^10.0.0 || ^11.0.0",

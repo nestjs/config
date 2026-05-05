@@ -49,6 +49,7 @@ describe('Environment variables and .env files', () => {
 
   describe('with conflicts and schema validation', () => {
     beforeAll(async () => {
+      process.env = {}
       process.env['PORT'] = '8000';
       const moduleRef = await Test.createTestingModule({
         imports: [
