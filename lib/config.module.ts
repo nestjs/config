@@ -1,25 +1,25 @@
 import { DynamicModule, Module } from '@nestjs/common';
-import { FactoryProvider } from '@nestjs/common/interfaces';
-import { isObject } from '@nestjs/common/utils/shared.utils';
+import { FactoryProvider } from '@nestjs/common/interfaces/index.js';
+import { isObject } from '@nestjs/common/utils/shared.utils.js';
 import { DotenvExpandOptions, expand } from 'dotenv-expand';
 import * as fs from 'fs';
 import { resolve } from 'path';
-import { ConfigHostModule } from './config-host.module';
+import { ConfigHostModule } from './config-host.module.js';
 import {
   CONFIGURATION_LOADER,
   CONFIGURATION_SERVICE_TOKEN,
   CONFIGURATION_TOKEN,
   VALIDATED_ENV_LOADER,
   VALIDATED_ENV_PROPNAME,
-} from './config.constants';
-import { ConfigService } from './config.service';
-import { ConfigFactory, ConfigModuleOptions } from './interfaces';
-import { Parser } from './types';
-import { ConfigFactoryKeyHost, getDefaultParser } from './utils';
-import { createConfigProvider } from './utils/create-config-factory.util';
-import { getRegistrationToken } from './utils/get-registration-token.util';
-import { mergeConfigObject } from './utils/merge-configs.util';
-import { validateWithStandardSchema } from './utils/validate-with-schema.util';
+} from './config.constants.js';
+import { ConfigService } from './config.service.js';
+import { ConfigFactory, ConfigModuleOptions } from './interfaces/index.js';
+import { Parser } from './types/index.js';
+import { ConfigFactoryKeyHost, getDefaultParser } from './utils/index.js';
+import { createConfigProvider } from './utils/create-config-factory.util.js';
+import { getRegistrationToken } from './utils/get-registration-token.util.js';
+import { mergeConfigObject } from './utils/merge-configs.util.js';
+import { validateWithStandardSchema } from './utils/validate-with-schema.util.js';
 
 /**
  * @publicApi

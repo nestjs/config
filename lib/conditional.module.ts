@@ -5,7 +5,7 @@ import {
   ModuleMetadata,
   Type,
 } from '@nestjs/common';
-import { ConfigModule } from './config.module';
+import { ConfigModule } from './config.module.js';
 
 /**
  * Same logic as in `@nestjs/core` package.

@@ -1,8 +1,8 @@
-import { FactoryProvider } from '@nestjs/common/interfaces';
-import { ConfigFactory } from '../interfaces';
-import { getConfigToken } from './get-config-token.util';
-import { ConfigFactoryKeyHost } from './register-as.util';
+import { FactoryProvider } from '@nestjs/common/interfaces/index.js';
 import { randomUUID } from 'crypto';
+import { ConfigFactory } from '../interfaces/index.js';
+import { getConfigToken } from './get-config-token.util.js';
+import { ConfigFactoryKeyHost } from './register-as.util.js';
 
 /**
  * @publicApi

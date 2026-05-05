@@ -1,8 +1,10 @@
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { join } from 'path';
-import { ConfigService } from '../../lib';
-import { AppModule } from '../src/app.module';
+import { fileURLToPath } from 'node:url';
+import { ConfigService } from '../../lib/index.js';
+import { AppModule } from '../src/app.module.js';
+
+const envValidFilePath = fileURLToPath(new URL('.env.valid', import.meta.url));
 
 describe('Zod Schema validation', () => {
   let app: INestApplication;
@@ -73,7 +75,7 @@ describe('Zod Schema validation', () => {
     it(`should parse loaded env variables with Zod`, async () => {
       const module = await Test.createTestingModule({
         imports: [
-          AppModule.withZodV3SchemaValidation(join(__dirname, '.env.valid')),
+          AppModule.withZodV3SchemaValidation(envValidFilePath),
         ],
       }).compile();
 
@@ -148,7 +150,7 @@ describe('Zod Schema validation', () => {
     it(`should parse loaded env variables with Zod`, async () => {
       const module = await Test.createTestingModule({
         imports: [
-          AppModule.withZodV4SchemaValidation(join(__dirname, '.env.valid')),
+          AppModule.withZodV4SchemaValidation(envValidFilePath),
         ],
       }).compile();
 
@@ -225,9 +227,7 @@ describe('Zod Schema validation', () => {
     it(`should parse loaded env variables with Zod`, async () => {
       const module = await Test.createTestingModule({
         imports: [
-          AppModule.withZodV4MiniSchemaValidation(
-            join(__dirname, '.env.valid'),
-          ),
+          AppModule.withZodV4MiniSchemaValidation(envValidFilePath),
         ],
       }).compile();
 

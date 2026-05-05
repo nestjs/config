@@ -1,7 +1,7 @@
 import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { DotenvExpandOptions } from 'dotenv-expand';
-import { Parser } from '../types';
-import { ConfigFactory } from './config-factory.interface';
+import { Parser } from '../types/index.js';
+import { ConfigFactory } from './config-factory.interface.js';
 
 /**
  * @publicApi

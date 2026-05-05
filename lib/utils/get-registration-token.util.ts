@@ -1,4 +1,4 @@
-import { PARTIAL_CONFIGURATION_KEY } from '../config.constants';
+import { PARTIAL_CONFIGURATION_KEY } from '../config.constants.js';
 
 /**
  * @publicApi

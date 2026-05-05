@@ -2,8 +2,8 @@ import { Global, Module } from '@nestjs/common';
 import {
   CONFIGURATION_SERVICE_TOKEN,
   CONFIGURATION_TOKEN,
-} from './config.constants';
-import { ConfigService } from './config.service';
+} from './config.constants.js';
+import { ConfigService } from './config.service.js';
 
 /**
  * @publicApi

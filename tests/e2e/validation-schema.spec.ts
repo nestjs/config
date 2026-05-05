@@ -1,8 +1,10 @@
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { join } from 'path';
-import { ConfigService } from '../../lib';
-import { AppModule } from '../src/app.module';
+import { fileURLToPath } from 'node:url';
+import { ConfigService } from '../../lib/index.js';
+import { AppModule } from '../src/app.module.js';
+
+const envValidFilePath = fileURLToPath(new URL('.env.valid', import.meta.url));
 
 describe('Schema validation', () => {
   let app: INestApplication;
@@ -74,7 +76,7 @@ describe('Schema validation', () => {
 
   it(`should parse loaded env variables`, async () => {
     const module = await Test.createTestingModule({
-      imports: [AppModule.withSchemaValidation(join(__dirname, '.env.valid'))],
+      imports: [AppModule.withSchemaValidation(envValidFilePath)],
     }).compile();
 
     app = module.createNestApplication();
