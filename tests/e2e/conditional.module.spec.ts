@@ -1,6 +1,6 @@
 import { Injectable, Module } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { ConfigModule, ConditionalModule } from '../../lib';
+import { ConfigModule, ConditionalModule } from '../../lib/index.js';
 import { join } from 'path';
 
 @Injectable()
