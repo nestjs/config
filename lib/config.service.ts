@@ -1,9 +1,13 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import { isUndefined } from '@nestjs/common/utils/shared.utils';
+<<<<<<< HEAD
+=======
+import * as dotenv from 'dotenv';
+import get from 'es-toolkit/compat/get';
+import has from 'es-toolkit/compat/has';
+import set from 'es-toolkit/compat/set';
+>>>>>>> bb1da82167d75c93019f481e6cb78dd7a0d62fcb
 import fs from 'fs';
-import get from 'lodash/get';
-import has from 'lodash/has';
-import set from 'lodash/set';
 import { Subject } from 'rxjs';
 import {
   CONFIGURATION_TOKEN,
