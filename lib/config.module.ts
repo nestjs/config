@@ -14,11 +14,12 @@ import {
 } from './config.constants';
 import { ConfigService } from './config.service';
 import { ConfigFactory, ConfigModuleOptions } from './interfaces';
+import { Parser } from './types';
 import { ConfigFactoryKeyHost, getDefaultParser } from './utils';
 import { createConfigProvider } from './utils/create-config-factory.util';
 import { getRegistrationToken } from './utils/get-registration-token.util';
 import { mergeConfigObject } from './utils/merge-configs.util';
-import { Parser } from './types';
+import { validateWithStandardSchema } from './utils/validate-with-schema.util';
 
 /**
  * @publicApi
@@ -53,8 +54,8 @@ export class ConfigModule {
    * Additionally, registers custom configurations globally.
    * @param options
    */
-  static async forRoot<ValidationOptions extends Record<string, any>>(
-    options: ConfigModuleOptions<ValidationOptions> = {},
+  static async forRoot(
+    options: ConfigModuleOptions = {},
   ): Promise<DynamicModule> {
     const envFilePaths = Array.isArray(options.envFilePath)
       ? options.envFilePath
@@ -77,9 +78,11 @@ export class ConfigModule {
       validatedEnvConfig = validatedConfig;
       this.assignVariablesToProcess(validatedConfig, options.override);
     } else if (options.validationSchema) {
-      const validationOptions = this.getSchemaValidationOptions(options);
-      const { error, value: validatedConfig } =
-        options.validationSchema.validate(config, validationOptions);
+      const { error, value: validatedConfig } = validateWithStandardSchema(
+        options.validationSchema,
+        config,
+        options.validationOptions,
+      );
 
       if (error) {
         throw new Error(`Config validation error: ${error.message}`);
@@ -91,7 +94,10 @@ export class ConfigModule {
     }
 
     const isConfigToLoad = options.load && options.load.length;
-    const configFactory = await Promise.all(options.load || []);
+    const configFactory = await Promise.all(
+      (options.load || []).map(load => Promise.resolve(load)),
+    );
+
     const providers = configFactory
       .map(factory =>
         createConfigProvider(factory as ConfigFactory & ConfigFactoryKeyHost),
@@ -240,20 +246,5 @@ export class ConfigModule {
     const factoryRef = provider.useFactory;
     const token = getRegistrationToken(factoryRef);
     mergeConfigObject(host, item, token);
-  }
-
-  private static getSchemaValidationOptions(
-    options: ConfigModuleOptions,
-  ): Record<string, any> {
-    if (options.validationOptions) {
-      if (typeof options.validationOptions.allowUnknown === 'undefined') {
-        options.validationOptions.allowUnknown = true;
-      }
-      return options.validationOptions;
-    }
-    return {
-      abortEarly: false,
-      allowUnknown: true,
-    };
   }
 }

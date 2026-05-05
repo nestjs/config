@@ -6,6 +6,13 @@ import { AppModule } from '../src/app.module';
 
 describe('Schema validation', () => {
   let app: INestApplication;
+  let envBackup: NodeJS.ProcessEnv;
+  beforeEach(() => {
+    envBackup = {
+      ...process.env,
+    };
+    process.env = {}
+  });
 
   it(`should validate loaded env variables`, async () => {
     try {
@@ -17,7 +24,21 @@ describe('Schema validation', () => {
       await app.init();
     } catch (err) {
       expect(err.message).toEqual(
-        'Config validation error: "PORT" is required. "DATABASE_NAME" is required',
+        'Config validation error: ' +
+        JSON.stringify(
+          [
+            {
+              message: '"PORT" is required',
+              path: ['PORT'],
+            },
+            {
+              message: '"DATABASE_NAME" is required',
+              path: ['DATABASE_NAME'],
+            },
+          ],
+          null,
+          2,
+        ),
       );
     }
   });
@@ -32,7 +53,21 @@ describe('Schema validation', () => {
       await app.init();
     } catch (err) {
       expect(err.message).toEqual(
-        'Config validation error: "PORT" is required. "DATABASE_NAME" is required',
+        'Config validation error: ' +
+        JSON.stringify(
+          [
+            {
+              message: '"PORT" is required',
+              path: ['PORT'],
+            },
+            {
+              message: '"DATABASE_NAME" is required',
+              path: ['DATABASE_NAME'],
+            },
+          ],
+          null,
+          2,
+        ),
       );
     }
   });
@@ -47,5 +82,12 @@ describe('Schema validation', () => {
 
     const configService = app.get(ConfigService);
     expect(typeof configService.get('PORT')).toEqual('number');
+  });
+
+  afterEach(async () => {
+    process.env = {
+      ...envBackup,
+    };
+    await app?.close();
   });
 });
