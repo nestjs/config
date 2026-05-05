@@ -69,6 +69,34 @@ describe('Optional Generic()', () => {
     expect(port).toEqual('default');
   });
 
+  it(`should compile error when return wrong type`, () => {
+    const configService =
+      moduleRef.get<ConfigService<{ PORT: string }>>(ConfigService);
+
+    // @ts-expect-error: PORT is a string, not a number. Should throw an error
+    const port: number | undefined = configService.get('PORT', { infer: true });
+
+    // @ts-expect-error: PORT is a string, not a number. Should throw an error
+    const portWithDefaultValue: number = configService.get('PORT', '', {
+      infer: true,
+    });
+  });
+
+  it(`should compile error when return wrong type (getOrThrow)`, () => {
+    const configService =
+      moduleRef.get<ConfigService<{ PORT: string }>>(ConfigService);
+
+    // @ts-expect-error: PORT is a string, not a number. Should throw an error
+    const port: number = configService.getOrThrow('PORT', {
+      infer: true,
+    });
+
+    // @ts-expect-error: PORT is a string, not a number. Should throw an error
+    const portWithDefaultValue: number = configService.getOrThrow('PORT', '', {
+      infer: true,
+    });
+  });
+
   afterEach(async () => {
     await app.close();
   });
