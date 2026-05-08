@@ -33,7 +33,7 @@
     "@types/node": "24.12.3",
     "husky": "9.1.7",
     "joi": "18.2.1",
-    "lint-staged": "17.0.2",
+    "lint-staged": "17.0.3",
     "oxlint": "1.63.0",
     "prettier": "3.8.3",
     "reflect-metadata": "0.2.2",
