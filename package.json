@@ -30,7 +30,7 @@
     "@nestjs/platform-express": "11.1.26",
     "@nestjs/testing": "11.1.26",
     "@types/lodash": "4.17.24",
-    "@types/node": "24.12.3",
+    "@types/node": "24.13.1",
     "husky": "9.1.7",
     "joi": "18.2.1",
     "lint-staged": "17.0.7",
