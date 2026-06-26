@@ -20,7 +20,7 @@
   "dependencies": {
     "dotenv": "17.4.2",
     "dotenv-expand": "13.0.0",
-    "es-toolkit": "1.46.1"
+    "es-toolkit": "1.49.0"
   },
   "devDependencies": {
     "@commitlint/cli": "21.1.0",
