@@ -1,4 +1,5 @@
 import { DynamicModule, Inject, Module, Optional } from '@nestjs/common';
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 import Joi from 'joi';
 import { z as zv3 } from 'zod/v3';
 import { z as zv4 } from 'zod/v4';
@@ -206,9 +207,11 @@ export class AppModule {
     };
   }
 
-  static withSchemaValidation(
+  static withStandardSchemaValidation(
+    validationSchema: StandardSchemaV1,
     envFilePath?: string,
     ignoreEnvFile?: boolean,
+    validationOptions?: StandardSchemaV1.Options,
   ): DynamicModule {
     return {
       module: AppModule,
@@ -216,76 +219,69 @@ export class AppModule {
         ConfigModule.forRoot({
           envFilePath,
           ignoreEnvFile,
-          validationSchema: Joi.object({
-            PORT: Joi.number().required(),
-            DATABASE_NAME: Joi.string().required(),
-          }),
-          validationOptions: {
-            libraryOptions: {
-              abortEarly: false,
-              allowUnknown: true,
-            },
-          }
+          validationSchema,
+          validationOptions,
         }),
       ],
     };
+  }
+
+  static withSchemaValidation(
+    envFilePath?: string,
+    ignoreEnvFile?: boolean,
+    validationOptions?: StandardSchemaV1.Options,
+  ): DynamicModule {
+    return AppModule.withStandardSchemaValidation(
+      Joi.object({
+        PORT: Joi.number().required(),
+        DATABASE_NAME: Joi.string().required(),
+      }),
+      envFilePath,
+      ignoreEnvFile,
+      validationOptions,
+    );
   }
 
   static withZodV3SchemaValidation(
     envFilePath?: string,
     ignoreEnvFile?: boolean,
   ): DynamicModule {
-    return {
-      module: AppModule,
-      imports: [
-        ConfigModule.forRoot({
-          envFilePath,
-          ignoreEnvFile,
-          validationSchema: zv3.object({
-            PORT: zv3.string().transform((val: string) => parseInt(val, 10)),
-            DATABASE_NAME: zv3.string(),
-          }),
-        }),
-      ],
-    };
+    return AppModule.withStandardSchemaValidation(
+      zv3.object({
+        PORT: zv3.string().transform((val: string) => parseInt(val, 10)),
+        DATABASE_NAME: zv3.string(),
+      }),
+      envFilePath,
+      ignoreEnvFile,
+    );
   }
 
   static withZodV4SchemaValidation(
     envFilePath?: string,
     ignoreEnvFile?: boolean,
   ): DynamicModule {
-    return {
-      module: AppModule,
-      imports: [
-        ConfigModule.forRoot({
-          envFilePath,
-          ignoreEnvFile,
-          validationSchema: zv4.object({
-            PORT: zv4.string().transform((val: string) => parseInt(val, 10)),
-            DATABASE_NAME: zv4.string(),
-          }),
-        }),
-      ],
-    };
+    return AppModule.withStandardSchemaValidation(
+      zv4.object({
+        PORT: zv4.string().transform((val: string) => parseInt(val, 10)),
+        DATABASE_NAME: zv4.string(),
+      }),
+      envFilePath,
+      ignoreEnvFile,
+    );
   }
 
   static withZodV4MiniSchemaValidation(
     envFilePath?: string,
     ignoreEnvFile?: boolean,
   ): DynamicModule {
-    return {
-      module: AppModule,
-      imports: [
-        ConfigModule.forRoot({
-          envFilePath,
-          ignoreEnvFile,
-          validationSchema: zv4Mini.object({
-            PORT: zv4Mini.coerce.number(),
-            DATABASE_NAME: zv4Mini.string(),
-          }),
-        }),
-      ],
-    };
+    return AppModule.withStandardSchemaValidation(
+      zv4Mini.object({
+        PORT: zv4Mini.coerce.number(),
+        DATABASE_NAME: zv4Mini.string(),
+      }),
+      envFilePath,
+      ignoreEnvFile,
+    );
   }
 
   static withValidateFunction(

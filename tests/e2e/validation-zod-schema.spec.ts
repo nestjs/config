@@ -5,230 +5,62 @@ import { ConfigService } from '../../lib/index.js';
 import { AppModule } from '../src/app.module.js';
 
 const envValidFilePath = fileURLToPath(new URL('.env.valid', import.meta.url));
+const envExtraFilePath = fileURLToPath(new URL('.env.extra', import.meta.url));
 
-describe('Zod Schema validation', () => {
+const variants = [
+  { name: 'Zod v3', withValidation: AppModule.withZodV3SchemaValidation },
+  { name: 'Zod v4', withValidation: AppModule.withZodV4SchemaValidation },
+  {
+    name: 'Zod v4 mini',
+    withValidation: AppModule.withZodV4MiniSchemaValidation,
+  },
+];
+
+describe('Zod schema validation', () => {
   let app: INestApplication;
+  let envBackup: NodeJS.ProcessEnv;
 
-  describe('Zod schema v3 validation', () => {
-    it(`should validate loaded env variables with Zod`, async () => {
-      try {
-        const module = await Test.createTestingModule({
-          imports: [AppModule.withZodV3SchemaValidation()],
-        }).compile();
-
-        app = module.createNestApplication();
-        await app.init();
-      } catch (err) {
-        const message = [
-          {
-            code: 'invalid_type',
-            expected: 'string',
-            received: 'undefined',
-            path: ['PORT'],
-            message: 'Required',
-          },
-          {
-            code: 'invalid_type',
-            expected: 'string',
-            received: 'undefined',
-            path: ['DATABASE_NAME'],
-            message: 'Required',
-          },
-        ];
-        expect(err.message).toEqual(
-          'Config validation error: ' + JSON.stringify(message, null, 2),
-        );
-      }
-    });
-
-    it(`should validate env variables even when ignoreEnvFile is true with Zod`, async () => {
-      try {
-        const module = await Test.createTestingModule({
-          imports: [AppModule.withZodV3SchemaValidation(undefined, true)],
-        }).compile();
-
-        app = module.createNestApplication();
-        await app.init();
-      } catch (err) {
-        const message = [
-          {
-            code: 'invalid_type',
-            expected: 'string',
-            received: 'undefined',
-            path: ['PORT'],
-            message: 'Required',
-          },
-          {
-            code: 'invalid_type',
-            expected: 'string',
-            received: 'undefined',
-            path: ['DATABASE_NAME'],
-            message: 'Required',
-          },
-        ];
-        expect(err.message).toEqual(
-          'Config validation error: ' + JSON.stringify(message, null, 2),
-        );
-      }
-    });
-
-    it(`should parse loaded env variables with Zod`, async () => {
-      const module = await Test.createTestingModule({
-        imports: [
-          AppModule.withZodV3SchemaValidation(envValidFilePath),
-        ],
-      }).compile();
-
-      app = module.createNestApplication();
-      await app.init();
-
-      const configService = app.get(ConfigService);
-      expect(typeof configService.get('PORT')).toEqual('number');
-      expect(typeof configService.get('DATABASE_NAME')).toEqual('string');
-    });
+  beforeEach(() => {
+    envBackup = { ...process.env };
+    delete process.env.PORT;
+    delete process.env.DATABASE_NAME;
+    delete process.env.FEATURE_FLAG;
   });
 
-  describe('Zod schema v4 validation', () => {
-    it(`should validate loaded env variables with Zod`, async () => {
-      try {
-        const module = await Test.createTestingModule({
-          imports: [AppModule.withZodV4SchemaValidation()],
-        }).compile();
-
-        app = module.createNestApplication();
-        await app.init();
-      } catch (err) {
-        const message = [
-          {
-            expected: 'string',
-            code: 'invalid_type',
-            path: ['PORT'],
-            message: 'Invalid input: expected string, received undefined',
-          },
-          {
-            expected: 'string',
-            code: 'invalid_type',
-            path: ['DATABASE_NAME'],
-            message: 'Invalid input: expected string, received undefined',
-          },
-        ];
-        expect(err.message).toEqual(
-          'Config validation error: ' + JSON.stringify(message, null, 2),
-        );
-      }
-    });
-
-    it(`should validate env variables even when ignoreEnvFile is true with Zod`, async () => {
-      try {
-        const module = await Test.createTestingModule({
-          imports: [AppModule.withZodV4SchemaValidation(undefined, true)],
-        }).compile();
-
-        app = module.createNestApplication();
-        await app.init();
-      } catch (err) {
-        const message = [
-          {
-            expected: 'string',
-            code: 'invalid_type',
-            path: ['PORT'],
-            message: 'Invalid input: expected string, received undefined',
-          },
-          {
-            expected: 'string',
-            code: 'invalid_type',
-            path: ['DATABASE_NAME'],
-            message: 'Invalid input: expected string, received undefined',
-          },
-        ];
-        expect(err.message).toEqual(
-          'Config validation error: ' + JSON.stringify(message, null, 2),
-        );
-      }
-    });
-
-    it(`should parse loaded env variables with Zod`, async () => {
-      const module = await Test.createTestingModule({
-        imports: [
-          AppModule.withZodV4SchemaValidation(envValidFilePath),
-        ],
-      }).compile();
-
-      app = module.createNestApplication();
-      await app.init();
-
-      const configService = app.get(ConfigService);
-      expect(typeof configService.get('PORT')).toEqual('number');
-      expect(typeof configService.get('DATABASE_NAME')).toEqual('string');
-    });
+  afterEach(async () => {
+    process.env = { ...envBackup };
+    await app?.close();
+    app = undefined as unknown as INestApplication;
   });
 
-  describe('Zod schema v4 mini validation', () => {
-    it(`should validate loaded env variables with Zod`, async () => {
-      try {
-        const module = await Test.createTestingModule({
-          imports: [AppModule.withZodV4MiniSchemaValidation()],
-        }).compile();
-
-        app = module.createNestApplication();
-        await app.init();
-      } catch (err) {
-        const message = [
-          {
-            expected: 'number',
-            code: 'invalid_type',
-            received: 'NaN',
-            path: ['PORT'],
-            message: 'Invalid input: expected number, received NaN',
-          },
-          {
-            expected: 'string',
-            code: 'invalid_type',
-            path: ['DATABASE_NAME'],
-            message: 'Invalid input: expected string, received undefined',
-          },
-        ];
-        expect(err.message).toEqual(
-          'Config validation error: ' + JSON.stringify(message, null, 2),
-        );
-      }
+  describe.each(variants)('$name', ({ withValidation }) => {
+    it(`should validate loaded env variables`, async () => {
+      await expect(
+        Test.createTestingModule({
+          imports: [withValidation()],
+        }).compile(),
+      ).rejects.toThrow(/^Config validation error: [\s\S]*PORT/);
     });
 
-    it(`should validate env variables even when ignoreEnvFile is true with Zod`, async () => {
-      try {
-        const module = await Test.createTestingModule({
-          imports: [AppModule.withZodV4MiniSchemaValidation(undefined, true)],
-        }).compile();
-
-        app = module.createNestApplication();
-        await app.init();
-      } catch (err) {
-        const message = [
-          {
-            expected: 'number',
-            code: 'invalid_type',
-            received: 'NaN',
-            path: ['PORT'],
-            message: 'Invalid input: expected number, received NaN',
-          },
-          {
-            expected: 'string',
-            code: 'invalid_type',
-            path: ['DATABASE_NAME'],
-            message: 'Invalid input: expected string, received undefined',
-          },
-        ];
-        expect(err.message).toEqual(
-          'Config validation error: ' + JSON.stringify(message, null, 2),
-        );
-      }
+    it(`should report an issue for every invalid variable`, async () => {
+      await expect(
+        Test.createTestingModule({
+          imports: [withValidation()],
+        }).compile(),
+      ).rejects.toThrow(/PORT[\s\S]*DATABASE_NAME/);
     });
 
-    it(`should parse loaded env variables with Zod`, async () => {
+    it(`should validate env variables even when ignoreEnvFile is true`, async () => {
+      await expect(
+        Test.createTestingModule({
+          imports: [withValidation(undefined, true)],
+        }).compile(),
+      ).rejects.toThrow(/^Config validation error: [\s\S]*DATABASE_NAME/);
+    });
+
+    it(`should parse loaded env variables`, async () => {
       const module = await Test.createTestingModule({
-        imports: [
-          AppModule.withZodV4MiniSchemaValidation(envValidFilePath),
-        ],
+        imports: [withValidation(envValidFilePath)],
       }).compile();
 
       app = module.createNestApplication();
@@ -237,6 +69,20 @@ describe('Zod Schema validation', () => {
       const configService = app.get(ConfigService);
       expect(typeof configService.get('PORT')).toEqual('number');
       expect(typeof configService.get('DATABASE_NAME')).toEqual('string');
+    });
+
+    it(`should keep env variables that the schema does not declare`, async () => {
+      const module = await Test.createTestingModule({
+        imports: [withValidation(envExtraFilePath)],
+      }).compile();
+
+      app = module.createNestApplication();
+      await app.init();
+
+      // Zod object schemas strip undeclared keys, but variables loaded from the
+      // env file must still reach process.env and ConfigService.
+      expect(process.env.FEATURE_FLAG).toEqual('enabled');
+      expect(app.get(ConfigService).get('FEATURE_FLAG')).toEqual('enabled');
     });
   });
 });

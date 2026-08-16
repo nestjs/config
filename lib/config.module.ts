@@ -78,26 +78,27 @@ export class ConfigModule {
       validatedEnvConfig = validatedConfig;
       this.assignVariablesToProcess(validatedConfig, options.override);
     } else if (options.validationSchema) {
-      const { error, value: validatedConfig } = validateWithStandardSchema(
-        options.validationSchema,
-        config,
-        options.validationOptions,
-      );
+      const { error, value: validatedConfig } =
+        await validateWithStandardSchema(
+          options.validationSchema,
+          config,
+          options.validationOptions,
+        );
 
       if (error) {
         throw new Error(`Config validation error: ${error.message}`);
       }
-      validatedEnvConfig = validatedConfig;
-      this.assignVariablesToProcess(validatedConfig, options.override);
+      // Object schemas strip the properties they don't declare (e.g. Zod), so
+      // the undeclared variables are merged back in to keep them available
+      // through process.env and ConfigService.
+      validatedEnvConfig = { ...config, ...validatedConfig };
+      this.assignVariablesToProcess(validatedEnvConfig, options.override);
     } else {
       this.assignVariablesToProcess(config, options.override);
     }
 
     const isConfigToLoad = options.load && options.load.length;
-    const configFactory = await Promise.all(
-      (options.load || []).map(load => Promise.resolve(load)),
-    );
-
+    const configFactory = await Promise.all(options.load || []);
     const providers = configFactory
       .map(factory =>
         createConfigProvider(factory as ConfigFactory & ConfigFactoryKeyHost),
