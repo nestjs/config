@@ -1,10 +1,21 @@
 {
   "name": "@nestjs/config",
-  "version": "4.0.4",
+  "version": "12.0.0-next.0",
+  "type": "module",
   "description": "Nest - modern, fast, powerful node.js web framework (@config)",
   "author": "Kamil Mysliwiec",
   "license": "MIT",
   "url": "https://github.com/nestjs/config#readme",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
   "scripts": {
     "build": "rimraf -rf dist && tsc -p tsconfig.json",
     "format": "prettier --write \"{lib,test}/**/*.ts\"",
@@ -18,9 +29,10 @@
     "release": "release-it"
   },
   "dependencies": {
+    "@standard-schema/spec": "1.1.0",
     "dotenv": "17.4.2",
     "dotenv-expand": "13.0.0",
-    "es-toolkit": "1.46.1"
+    "es-toolkit": "1.51.0"
   },
   "devDependencies": {
     "@commitlint/cli": "21.2.2",
@@ -41,8 +53,10 @@
     "rimraf": "6.1.3",
     "rxjs": "7.8.2",
     "typescript": "7.0.2",
-    "vite": "^8.0.8",
-    "vitest": "4.1.10"
+    "valibot": "1.4.2",
+    "vite": "8.2.1",
+    "vitest": "4.1.10",
+    "zod": "4.1.5"
   },
   "peerDependencies": {
     "@nestjs/common": "^10.0.0 || ^11.0.0",

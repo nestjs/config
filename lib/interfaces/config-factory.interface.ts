@@ -1,4 +1,4 @@
-import { ConfigObject } from '../types';
+import { ConfigObject } from '../types/index.js';
 
 type ConfigFactoryReturnValue<T extends ConfigObject> = T | Promise<T>;
 

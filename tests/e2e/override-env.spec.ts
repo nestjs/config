@@ -1,11 +1,11 @@
-import { join } from "path"
 import * as fs from 'fs';
-import { Test } from "@nestjs/testing";
-import { ConfigModule } from "../../lib";
+import { Test } from '@nestjs/testing';
+import { fileURLToPath } from 'node:url';
+import { ConfigModule } from '../../lib/index.js';
 
 
 describe('Environment variables override', () => {
-    const envFilePath = join(__dirname, '.env.override-test');
+    const envFilePath = fileURLToPath(new URL('.env.override-test', import.meta.url));
 
     beforeAll(() => {
         // Create a temporary .env file for test

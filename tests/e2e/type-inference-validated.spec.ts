@@ -5,7 +5,7 @@
  * These tests use @ts-expect-error to verify that TypeScript correctly
  * detects type errors when assigning potentially undefined values to strict types.
  */
-import { ConfigService } from '../../lib';
+import { ConfigService } from '../../lib/index.js';
 
 // Simulates a Zod schema with optional field: z.object({ KEY: z.string().optional() })
 type ConfigWithOptional = {

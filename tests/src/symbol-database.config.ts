@@ -1,4 +1,4 @@
-import { registerAs } from '../../lib/utils';
+import { registerAs } from '../../lib/utils/index.js';
 
 export const DATABASE_SYMBOL_TOKEN = Symbol('database');
 

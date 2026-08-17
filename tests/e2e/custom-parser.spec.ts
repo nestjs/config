@@ -1,7 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { ConfigModule } from '../../lib';
-import { AppModule } from '../src/app.module';
+import { ConfigModule } from '../../lib/index.js';
+import { AppModule } from '../src/app.module.js';
 import { join } from 'path';
 
 describe('Custom parser', () => {

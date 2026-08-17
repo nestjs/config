@@ -1,8 +1,10 @@
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { join } from 'path';
-import { ConfigService } from '../../lib';
-import { AppModule } from '../src/app.module';
+import { fileURLToPath } from 'node:url';
+import { ConfigService } from '../../lib/index.js';
+import { AppModule } from '../src/app.module.js';
+
+const envValidFilePath = fileURLToPath(new URL('.env.valid', import.meta.url));
 
 describe('Schema validation', () => {
   let app: INestApplication;
@@ -50,7 +52,7 @@ describe('Schema validation', () => {
     let hasThrown = false;
     const module = await Test.createTestingModule({
       imports: [
-        AppModule.withValidateFunction(validate, join(__dirname, '.env.valid')),
+        AppModule.withValidateFunction(validate, envValidFilePath),
       ],
     }).compile();
 
@@ -73,7 +75,7 @@ describe('Schema validation', () => {
       imports: [
         AppModule.withValidateFunction(
           validateAndTransform,
-          join(__dirname, '.env.valid'),
+          envValidFilePath,
         ),
       ],
     }).compile();

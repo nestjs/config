@@ -1,5 +1,5 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
-import { isUndefined } from '@nestjs/common/utils/shared.utils';
+import { isUndefined } from '@nestjs/common/utils/shared.utils.js';
 import get from 'es-toolkit/compat/get';
 import has from 'es-toolkit/compat/has';
 import set from 'es-toolkit/compat/set';
@@ -8,10 +8,10 @@ import { Subject } from 'rxjs';
 import {
   CONFIGURATION_TOKEN,
   VALIDATED_ENV_PROPNAME,
-} from './config.constants';
-import { ConfigChangeEvent } from './interfaces/config-change-event.interface';
-import { NoInferType, Parser, Path, PathValue } from './types';
-import { getDefaultParser } from './utils';
+} from './config.constants.js';
+import { ConfigChangeEvent } from './interfaces/config-change-event.interface.js';
+import { NoInferType, Parser, Path, PathValue } from './types/index.js';
+import { getDefaultParser } from './utils/index.js';
 
 /**
  * `ValidatedResult<WasValidated, T>

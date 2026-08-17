@@ -1,12 +1,13 @@
+import type { StandardSchemaV1 } from '@standard-schema/spec';
 import { DotenvExpandOptions } from 'dotenv-expand';
-import { Parser } from '../types';
-import { ConfigFactory } from './config-factory.interface';
+import { Parser } from '../types/index.js';
+import { ConfigFactory } from './config-factory.interface.js';
 
 /**
  * @publicApi
  */
 export interface ConfigModuleOptions<
-  ValidationOptions extends Record<string, any> = Record<string, any>,
+  ValidationOptions extends StandardSchemaV1.Options = StandardSchemaV1.Options,
 > {
   /**
    * If "true", values from the process.env object will be cached in the memory.
@@ -62,13 +63,13 @@ export interface ConfigModuleOptions<
   skipProcessEnv?: boolean;
 
   /**
-   * Environment variables validation schema (Joi).
+   * Environment variables validation schema (Standard Schema, e.g. Zod, Arktype).
+   * @see https://standardschema.dev/
    */
-  validationSchema?: any;
+  validationSchema?: StandardSchemaV1;
 
   /**
-   * Schema validation options.
-   * See: https://joi.dev/api/?v=17.3.0#anyvalidatevalue-options
+   * Options to pass to the Standard Schema validation.
    */
   validationOptions?: ValidationOptions;
 

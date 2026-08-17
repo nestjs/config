@@ -1,8 +1,10 @@
 import { INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { join } from 'path';
-import { ConfigService } from '../../lib';
-import { AppModule } from '../src/app.module';
+import { fileURLToPath } from 'node:url';
+import { ConfigService } from '../../lib/index.js';
+import { AppModule } from '../src/app.module.js';
+
+const envValidFilePath = fileURLToPath(new URL('.env.valid', import.meta.url));
 
 describe('Environment variables and .env files', () => {
   let app: INestApplication;
@@ -49,10 +51,11 @@ describe('Environment variables and .env files', () => {
 
   describe('with conflicts and schema validation', () => {
     beforeAll(async () => {
+      process.env = {}
       process.env['PORT'] = '8000';
       const moduleRef = await Test.createTestingModule({
         imports: [
-          AppModule.withSchemaValidation(join(__dirname, '.env.valid')),
+          AppModule.withSchemaValidation(envValidFilePath),
         ],
       }).compile();
 
