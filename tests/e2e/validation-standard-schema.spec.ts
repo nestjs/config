@@ -129,7 +129,9 @@ describe('Standard Schema validation', () => {
   });
 
   it(`should forward validationOptions to the schema`, async () => {
-    const validate = vi.fn(() => ({ value: {} }));
+    const validate = vi.fn<StandardSchemaV1['~standard']['validate']>(() => ({
+      value: {},
+    }));
     const schema = createSchema(validate);
     const validationOptions = { libraryOptions: { custom: true } };
 
@@ -151,7 +153,9 @@ describe('Standard Schema validation', () => {
   });
 
   it(`should not inject Joi defaults into other vendors' options`, async () => {
-    const validate = vi.fn(() => ({ value: {} }));
+    const validate = vi.fn<StandardSchemaV1['~standard']['validate']>(() => ({
+      value: {},
+    }));
     const schema = createSchema(validate, 'zod');
 
     const module = await Test.createTestingModule({
