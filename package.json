@@ -56,7 +56,7 @@
     "valibot": "1.4.2",
     "vite": "8.2.2",
     "vitest": "4.1.11",
-    "zod": "4.4.3"
+    "zod": "4.5.2"
   },
   "peerDependencies": {
     "@nestjs/common": "^11.0.0 || ^12.0.0",
