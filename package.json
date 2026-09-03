@@ -44,7 +44,7 @@
     "@types/lodash": "4.17.25",
     "@types/node": "24.13.3",
     "husky": "9.1.7",
-    "joi": "18.2.5",
+    "joi": "18.2.8",
     "lint-staged": "17.4.1",
     "oxlint": "1.81.0",
     "prettier": "3.9.6",
