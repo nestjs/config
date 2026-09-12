@@ -347,10 +347,17 @@ export class ConfigService<
       }
     }
 
-    const regex = new RegExp(`\\$\\{?${propertyPath}\\}?`, 'g');
+    const escapedKey = propertyPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(
+      `\\$\\{${escapedKey}\\}|\\$${escapedKey}(?!\\w)`,
+      'g',
+    );
     for (const [k, v] of Object.entries(config)) {
-      if (regex.test(v)) {
-        process.env[k] = v.replace(regex, value);
+      if (typeof v === 'string') {
+        const updated = v.replace(regex, value);
+        if (updated !== v) {
+          process.env[k] = updated;
+        }
       }
     }
   }
