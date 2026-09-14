@@ -354,7 +354,7 @@ export class ConfigService<
     );
     for (const [k, v] of Object.entries(config)) {
       if (typeof v === 'string') {
-        const updated = v.replace(regex, value);
+        const updated = v.replace(regex, () => value);
         if (updated !== v) {
           process.env[k] = updated;
         }

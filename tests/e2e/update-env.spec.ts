@@ -46,6 +46,8 @@ describe('Setting environment variables', () => {
     const prevEmail = module.get(ConfigService).get('EMAIL');
     const prevSupportUrl = module.get(ConfigService).get('SUPPORT_URL');
     const prevUrlPort = module.get(ConfigService).get('URL_PORT');
+    const prevDeep = module.get(ConfigService).get('DEEP');
+    const prevFallback = module.get(ConfigService).get('FALLBACK');
 
     module.get(ConfigService).set('URL', 'yourapp.test');
 
@@ -53,17 +55,24 @@ describe('Setting environment variables', () => {
     const updatedEmail = module.get(ConfigService).get('EMAIL');
     const updatedSupportUrl = module.get(ConfigService).get('SUPPORT_URL');
     const updatedUrlPort = module.get(ConfigService).get('URL_PORT');
+    const updatedDeep = module.get(ConfigService).get('DEEP');
+    const updatedFallback = module.get(ConfigService).get('FALLBACK');
 
     expect(prevUrl).toEqual('myapp.test');
     expect(prevEmail).toEqual('support@myapp.test');
     expect(prevSupportUrl).toEqual('https://myapp.test/help');
     expect(prevUrlPort).toEqual('myapp.test:8080');
+    expect(prevDeep).toEqual('host=myapp.test:8080/path');
+    expect(prevFallback).toEqual('myapp.test');
 
     expect(updatedUrl).toEqual('yourapp.test');
     expect(updatedEmail).toEqual('support@yourapp.test');
     expect(updatedSupportUrl).toEqual('https://yourapp.test/help');
-    // Ensure URL_PORT was not corrupted by partial prefix replacement
-    expect(updatedUrlPort).toEqual('myapp.test:8080');
+    expect(updatedUrlPort).toEqual('yourapp.test:8080');
+    // Ensure DEEP (referencing URL_PORT) is not corrupted by partial prefix replacement into host=yourapp.test_PORT}/path
+    expect(updatedDeep).toEqual('host=myapp.test:8080/path');
+    // Ensure FALLBACK (${URL:-fallback}) is not mangled into yourapp.test:-fallback}
+    expect(updatedFallback).toEqual('myapp.test');
   });
 
   it(`should return updated process.env property after set`, async () => {
@@ -76,7 +85,17 @@ describe('Setting environment variables', () => {
     expect(envVars.URL).toEqual('yourapp.test');
     expect(envVars.EMAIL).toEqual('support@yourapp.test');
     expect(envVars.SUPPORT_URL).toEqual('https://yourapp.test/help');
-    expect(envVars.URL_PORT).toEqual('myapp.test:8080');
+    expect(envVars.URL_PORT).toEqual('yourapp.test:8080');
+    expect(envVars.DEEP).toEqual('host=myapp.test:8080/path');
+    expect(envVars.FALLBACK).toEqual('myapp.test');
+  });
+
+  it('should safely handle special replacement patterns in new value', async () => {
+    module.get(ConfigService).set('URL', 'pa$$word');
+    expect(module.get(ConfigService).get('EMAIL')).toEqual('support@pa$$word');
+
+    module.get(ConfigService).set('URL', 'x$&y');
+    expect(module.get(ConfigService).get('EMAIL')).toEqual('support@x$&y');
   });
 
   afterEach(async () => {
