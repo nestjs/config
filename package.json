@@ -30,7 +30,7 @@
   },
   "dependencies": {
     "@standard-schema/spec": "1.1.0",
-    "dotenv": "17.4.2",
+    "dotenv": "18.0.2",
     "dotenv-expand": "13.0.0",
     "es-toolkit": "1.51.0"
   },
