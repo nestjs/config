@@ -6,7 +6,11 @@ import { z as zv4 } from 'zod/v4';
 import * as zv4Mini from 'zod/mini';
 import { fileURLToPath } from 'node:url';
 import { join } from 'path';
-import { ConfigFactory, ConfigType } from '../../lib/index.js';
+import {
+  ConfigFactory,
+  ConfigModuleOptions,
+  ConfigType,
+} from '../../lib/index.js';
 import { ConfigModule } from '../../lib/config.module.js';
 import { ConfigService } from '../../lib/config.service.js';
 import databaseConfig from './database.config.js';
@@ -101,13 +105,14 @@ export class AppModule {
     };
   }
 
-  static withExpandedEnvVars(): DynamicModule {
+  static withExpandedEnvVars(options: ConfigModuleOptions = {}): DynamicModule {
     return {
       module: AppModule,
       imports: [
         ConfigModule.forRoot({
           envFilePath: join(testSrcDir, '.env.expanded'),
           expandVariables: true,
+          ...options,
         }),
       ],
     };
