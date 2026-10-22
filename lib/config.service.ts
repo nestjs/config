@@ -67,6 +67,7 @@ export class ConfigService<
   private _skipProcessEnv = false;
   private _isCacheEnabled = false;
   private envFilePaths: string[] = [];
+  private predefinedEnv = new Map<string, string | undefined>();
   private parser: Parser = getDefaultParser();
 
   constructor(
@@ -252,7 +253,7 @@ export class ConfigService<
 
     if (typeof propertyPath === 'string') {
       process.env[propertyPath] = String(value);
-      this.updateInterpolatedEnv(propertyPath, String(value));
+      this.updateInterpolatedEnv(propertyPath);
     }
 
     if (this.isCacheEnabled) {
@@ -336,7 +337,7 @@ export class ConfigService<
     return options && options?.infer && Object.keys(options).length === 1;
   }
 
-  private updateInterpolatedEnv(propertyPath: string, value: string): void {
+  private updateInterpolatedEnv(propertyPath: string): void {
     let config: Record<string, any> = {};
     for (const envFilePath of this.envFilePaths) {
       if (fs.existsSync(envFilePath)) {
@@ -347,17 +348,59 @@ export class ConfigService<
       }
     }
 
-    const escapedKey = propertyPath.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const regex = new RegExp(
-      `\\$\\{${escapedKey}\\}|\\$${escapedKey}(?!\\w)`,
-      'g',
-    );
+    // Same syntax as in dotenv-expand: $KEY, ${KEY}, ${KEY:-default},
+    // ${KEY:+alternative} (also without ":") and \$ for literal $
+    const referenceRegex =
+      /\\\$|\$\{([^{}:+-]+)(?:(:?[-+])([^{}]*))?\}|\$([A-Za-z_]\w*)/g;
+    const changedKeys = new Set([propertyPath]);
+    const validatedEnv = this.internalConfig[VALIDATED_ENV_PROPNAME];
     for (const [k, v] of Object.entries(config)) {
-      if (typeof v === 'string') {
-        const updated = v.replace(regex, () => value);
-        if (updated !== v) {
-          process.env[k] = updated;
-        }
+      // Value that was in process.env before env file was loaded wins, same
+      // as in dotenv-expand on startup
+      const predefined = this.predefinedEnv.get(k);
+      if (
+        typeof v !== 'string' ||
+        k === propertyPath ||
+        (predefined && predefined !== v)
+      ) {
+        continue;
+      }
+      const references = [...v.matchAll(referenceRegex)].map(
+        ([, key, , , plainKey]) => key ?? plainKey,
+      );
+      if (!references.some(ref => changedKeys.has(ref))) {
+        continue;
+      }
+      // All references get current values, which are inserted as is (unlike
+      // dotenv-expand, "$" inside of them is not expanded again)
+      const updated = v.replace(
+        referenceRegex,
+        (match, key, operator = '', alternative = '', plainKey) => {
+          if (match === '\\$') {
+            return '$';
+          }
+          const name = key ?? plainKey;
+          const current = name === k ? undefined : process.env[name];
+          if (operator.endsWith('+')) {
+            return current ? alternative : '';
+          }
+          return current || alternative;
+        },
+      );
+      if (updated === process.env[k]) {
+        continue;
+      }
+      changedKeys.add(k);
+      process.env[k] = updated;
+      if (this.isCacheEnabled) {
+        this.setInCacheIfDefined(k as KeyOf<K>, updated);
+      }
+      if (
+        validatedEnv &&
+        !Object.isFrozen(validatedEnv) &&
+        has(validatedEnv, k)
+      ) {
+        set(validatedEnv, k, updated);
       }
     }
   }
