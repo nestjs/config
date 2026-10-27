@@ -1,12 +1,20 @@
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
 import Joi from 'joi';
+import { fileURLToPath } from 'node:url';
+import { join } from 'path';
 import {
   ConfigModule,
   ConfigModuleOptions,
   ConfigService,
 } from '../../lib/index.js';
 import { AppModule } from '../src/app.module.js';
+
+const testSrcDir = fileURLToPath(new URL('../src', import.meta.url));
+const chainEnvFilePaths = [
+  join(testSrcDir, '.env.chain.local'),
+  join(testSrcDir, '.env.chain'),
+];
 
 const variants: { name: string; options: ConfigModuleOptions }[] = [
   { name: 'cache', options: { cache: true } },
@@ -203,6 +211,46 @@ describe('Setting environment variables with module options', () => {
     });
 
     expect(() => configService.set('URL', 'yourapp.test')).not.toThrow();
+  });
+
+  it('should update chain of variables in order of the first env file', async () => {
+    const configService = await createConfigService({
+      envFilePath: chainEnvFilePaths,
+    });
+    expect(configService.get('COPY_OF_COPY')).toEqual('1');
+    expect(configService.get('SUFFIXED')).toEqual('1-suffix');
+
+    configService.set('BASE', '2');
+
+    expect(configService.get('COPY')).toEqual('2');
+    expect(configService.get('COPY_OF_COPY')).toEqual('2');
+    expect(configService.get('SUFFIXED')).toEqual('2-suffix');
+  });
+
+  it('should update variables loaded by an earlier bootstrap in the same process', async () => {
+    await createConfigService({});
+    await app.close();
+    const configService = await createConfigService({});
+
+    configService.set('URL', 'yourapp.test');
+
+    expect(configService.get('EMAIL')).toEqual('support@yourapp.test');
+    expect(configService.get('DEEP')).toEqual('host=yourapp.test:8080/path');
+  });
+
+  it('should keep type converted by validation schema of dependent variable', async () => {
+    const configService = await createConfigService({
+      envFilePath: chainEnvFilePaths,
+      validationSchema: Joi.object({ BASE: Joi.number(), COPY: Joi.number() }),
+    });
+    expect(configService.get('COPY')).toEqual(1);
+
+    configService.set('BASE', 2);
+
+    // not validated again, so converted value is not replaced by a string
+    expect(configService.get('COPY')).toEqual(1);
+    expect(process.env.COPY).toEqual('2');
+    expect(configService.get('COPY_OF_COPY')).toEqual('2');
   });
 
   afterEach(async () => {

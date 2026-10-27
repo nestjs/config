@@ -119,13 +119,13 @@ export class ConfigModule {
         if (options.skipProcessEnv) {
           untypedConfigService.skipProcessEnv = true;
         }
-        untypedConfigService.predefinedEnv = predefinedEnv;
 
         // env files are re-read by "set" only to update expanded variables
         configService.setEnvFilePaths(
           options.expandVariables && !options.ignoreEnvFile ? envFilePaths : [],
         );
         configService.setParser(parser);
+        untypedConfigService.setPredefinedEnv(predefinedEnv);
         return configService;
       },
       inject: [CONFIGURATION_SERVICE_TOKEN, ...configProviderTokens],

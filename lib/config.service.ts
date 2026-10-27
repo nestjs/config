@@ -13,6 +13,12 @@ import { ConfigChangeEvent } from './interfaces/config-change-event.interface.js
 import { NoInferType, Parser, Path, PathValue } from './types/index.js';
 import { getDefaultParser } from './utils/index.js';
 
+// Same syntax as in dotenv-expand: $KEY, ${KEY}, ${KEY:-default},
+// ${KEY:+alternative} (also without ":") and \$ for literal $. Nested defaults
+// (${A:-${B}}) are not supported
+const ENV_REFERENCE_REGEX =
+  /\\\$|\$\{([^{}:+-]+)(?:(:?[-+])([^{}]*))?\}|\$([A-Za-z_]\w*)/g;
+
 /**
  * `ValidatedResult<WasValidated, T>
  *
@@ -337,21 +343,60 @@ export class ConfigService<
     return options && options?.infer && Object.keys(options).length === 1;
   }
 
-  private updateInterpolatedEnv(propertyPath: string): void {
-    let config: Record<string, any> = {};
-    for (const envFilePath of this.envFilePaths) {
-      if (fs.existsSync(envFilePath)) {
-        config = Object.assign(
-          this.parser(fs.readFileSync(envFilePath)),
-          config,
-        );
+  private setPredefinedEnv(
+    predefinedEnv: Map<string, string | undefined>,
+  ): void {
+    // Variable that already has its expanded env file value was loaded by an
+    // earlier "forRoot" (e.g. app bootstrapped again in the same process)
+    for (const [key, value] of Object.entries(this.readEnvFiles())) {
+      if (
+        typeof value === 'string' &&
+        predefinedEnv.get(key) === this.expandReferences(key, value)
+      ) {
+        predefinedEnv.delete(key);
       }
     }
+    this.predefinedEnv = predefinedEnv;
+  }
 
-    // Same syntax as in dotenv-expand: $KEY, ${KEY}, ${KEY:-default},
-    // ${KEY:+alternative} (also without ":") and \$ for literal $
-    const referenceRegex =
-      /\\\$|\$\{([^{}:+-]+)(?:(:?[-+])([^{}]*))?\}|\$([A-Za-z_]\w*)/g;
+  private readEnvFiles(): Record<string, unknown> {
+    // First file wins, as on startup. Its keys come first, so that chains of
+    // references are updated in file order
+    const config: Record<string, unknown> = {};
+    for (const envFilePath of this.envFilePaths) {
+      if (fs.existsSync(envFilePath)) {
+        const parsed = this.parser(fs.readFileSync(envFilePath));
+        for (const [key, value] of Object.entries(parsed)) {
+          if (!Object.prototype.hasOwnProperty.call(config, key)) {
+            config[key] = value;
+          }
+        }
+      }
+    }
+    return config;
+  }
+
+  private expandReferences(key: string, value: string): string {
+    // Current values are inserted as is (unlike dotenv-expand, "$" inside of
+    // them is not expanded again)
+    return value.replace(
+      ENV_REFERENCE_REGEX,
+      (match, bracedKey, operator = '', alternative = '', plainKey) => {
+        if (match === '\\$') {
+          return '$';
+        }
+        const name = bracedKey ?? plainKey;
+        const current = name === key ? undefined : process.env[name];
+        if (operator.endsWith('+')) {
+          return current ? alternative : '';
+        }
+        return current || alternative;
+      },
+    );
+  }
+
+  private updateInterpolatedEnv(propertyPath: string): void {
+    const config = this.readEnvFiles();
     const changedKeys = new Set([propertyPath]);
     const validatedEnv = this.internalConfig[VALIDATED_ENV_PROPNAME];
     for (const [k, v] of Object.entries(config)) {
@@ -365,28 +410,13 @@ export class ConfigService<
       ) {
         continue;
       }
-      const references = [...v.matchAll(referenceRegex)].map(
+      const references = [...v.matchAll(ENV_REFERENCE_REGEX)].map(
         ([, key, , , plainKey]) => key ?? plainKey,
       );
       if (!references.some(ref => changedKeys.has(ref))) {
         continue;
       }
-      // All references get current values, which are inserted as is (unlike
-      // dotenv-expand, "$" inside of them is not expanded again)
-      const updated = v.replace(
-        referenceRegex,
-        (match, key, operator = '', alternative = '', plainKey) => {
-          if (match === '\\$') {
-            return '$';
-          }
-          const name = key ?? plainKey;
-          const current = name === k ? undefined : process.env[name];
-          if (operator.endsWith('+')) {
-            return current ? alternative : '';
-          }
-          return current || alternative;
-        },
-      );
+      const updated = this.expandReferences(k, v);
       if (updated === process.env[k]) {
         continue;
       }
@@ -395,10 +425,12 @@ export class ConfigService<
       if (this.isCacheEnabled) {
         this.setInCacheIfDefined(k as KeyOf<K>, updated);
       }
+      // Value converted by validation (e.g. to a number) is not replaced by a
+      // string, it isn't validated again
       if (
         validatedEnv &&
         !Object.isFrozen(validatedEnv) &&
-        has(validatedEnv, k)
+        typeof get(validatedEnv, k) === 'string'
       ) {
         set(validatedEnv, k, updated);
       }
