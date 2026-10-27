@@ -61,6 +61,9 @@ export class ConfigModule {
       ? options.envFilePath
       : [options.envFilePath || resolve(process.cwd(), '.env')];
     const parser = options.parser ?? getDefaultParser();
+    const predefinedEnv = new Map(
+      options.override ? [] : Object.entries(process.env),
+    );
 
     let validatedEnvConfig: Record<string, any> | undefined = undefined;
     let config = options.ignoreEnvFile
@@ -117,8 +120,12 @@ export class ConfigModule {
           untypedConfigService.skipProcessEnv = true;
         }
 
-        configService.setEnvFilePaths(envFilePaths);
+        // env files are re-read by "set" only to update expanded variables
+        configService.setEnvFilePaths(
+          options.expandVariables && !options.ignoreEnvFile ? envFilePaths : [],
+        );
         configService.setParser(parser);
+        untypedConfigService.setPredefinedEnv(predefinedEnv);
         return configService;
       },
       inject: [CONFIGURATION_SERVICE_TOKEN, ...configProviderTokens],
