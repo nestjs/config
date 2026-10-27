@@ -217,12 +217,40 @@ export class ConfigModule {
             typeof options.expandVariables === 'object'
               ? options.expandVariables
               : {};
-          config =
-            expand({ ...expandOptions, parsed: config }).parsed || config;
+          config = this.expandVariables(
+            config,
+            expandOptions,
+            options.override,
+          );
         }
       }
     }
     return config;
+  }
+
+  private static expandVariables(
+    config: Record<string, any>,
+    expandOptions: DotenvExpandOptions,
+    override?: boolean,
+  ): Record<string, any> {
+    if (!override) {
+      return expand({ ...expandOptions, parsed: config }).parsed || config;
+    }
+
+    // "dotenv-expand" gives precedence to the values that are already present
+    // in "processEnv" over the ones parsed from the file, which would silently
+    // undo the "override" option. Expand against a copy in which the values from
+    // the file win instead, then write the result to the original target as
+    // "dotenv-expand" itself would have done.
+    const processEnv = expandOptions.processEnv ?? process.env;
+    const expanded =
+      expand({
+        ...expandOptions,
+        parsed: config,
+        processEnv: { ...processEnv, ...config },
+      }).parsed || config;
+    Object.assign(processEnv, expanded);
+    return expanded;
   }
 
   private static assignVariablesToProcess(
