@@ -35,8 +35,8 @@
     "es-toolkit": "1.52.0"
   },
   "devDependencies": {
-    "@commitlint/cli": "21.2.3",
-    "@commitlint/config-angular": "21.2.3",
+    "@commitlint/cli": "21.2.4",
+    "@commitlint/config-angular": "21.2.4",
     "@nestjs/common": "12.1.0",
     "@nestjs/core": "12.1.0",
     "@nestjs/platform-express": "12.1.0",
