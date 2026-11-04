@@ -41,11 +41,14 @@ export interface ConfigModuleOptions<
   /**
    * Custom function to validate environment variables. It takes an object containing environment
    * variables as input and outputs validated environment variables.
-   * If exception is thrown in the function it would prevent the application from bootstrapping.
+   * If exception is thrown in the function (or the promise it returns is rejected) it would prevent
+   * the application from bootstrapping.
    * Also, environment variables can be edited through this function, changes
    * will be reflected in the process.env object.
    */
-  validate?: (config: Record<string, any>) => Record<string, any>;
+  validate?: (
+    config: Record<string, any>,
+  ) => Record<string, any> | Promise<Record<string, any>>;
 
   /**
    * If "true", predefined environment variables will be validated.
@@ -58,6 +61,8 @@ export interface ConfigModuleOptions<
 
   /**
    * If "true", process environment variables (process.env) will be ignored and not picked up by the `ConfigService#get` method.
+   * Variables declared by the `validationSchema` are still served (validated), even if they come from process.env.
+   * With a `validate` function, whatever it returns is served, so it should only return the variables it validates.
    * @default false
    */
   skipProcessEnv?: boolean;

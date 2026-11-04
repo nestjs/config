@@ -1,4 +1,4 @@
-import set from 'es-toolkit/compat/set';
+import { setProperty } from './property-path.util.js';
 
 /**
  * @publicApi
@@ -9,7 +9,7 @@ export function mergeConfigObject(
   token?: string,
 ): Record<string, any> | undefined {
   if (token) {
-    set(host, token, partial);
+    setProperty(host, token, partial);
     return partial;
   }
   Object.assign(host, partial);

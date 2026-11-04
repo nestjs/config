@@ -117,4 +117,34 @@ describe('Environment variables override with expanded variables', () => {
     expect(processEnv.EXISTING_VAR).toBe('file_value');
     expect(processEnv.DERIVED_VAR).toBe('file_value_derived');
   });
+
+  it('should expand a self-reference when "override" is true', async () => {
+    const selfReferenceEnvFilePath = fileURLToPath(
+      new URL('.env.override-expand-self-reference-test', import.meta.url),
+    );
+    fs.writeFileSync(
+      selfReferenceEnvFilePath,
+      ['SELF_REF=$SELF_REF', 'DEPENDS_ON_SELF_REF=$SELF_REF/z'].join('\n'),
+    );
+
+    try {
+      const moduleRef = await Test.createTestingModule({
+        imports: [
+          ConfigModule.forRoot({
+            envFilePath: selfReferenceEnvFilePath,
+            expandVariables: true,
+            override: true,
+          }),
+        ],
+      }).compile();
+      const configService = moduleRef.get(ConfigService);
+
+      expect(configService.get('SELF_REF')).toBe('');
+      expect(configService.get('DEPENDS_ON_SELF_REF')).toBe('/z');
+    } finally {
+      fs.unlinkSync(selfReferenceEnvFilePath);
+      delete process.env.SELF_REF;
+      delete process.env.DEPENDS_ON_SELF_REF;
+    }
+  });
 });

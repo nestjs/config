@@ -1,9 +1,5 @@
 import { Inject, Injectable, Optional } from '@nestjs/common';
 import { isUndefined } from '@nestjs/common/utils/shared.utils.js';
-import get from 'es-toolkit/compat/get';
-import has from 'es-toolkit/compat/has';
-import set from 'es-toolkit/compat/set';
-import fs from 'fs';
 import { Subject } from 'rxjs';
 import {
   CONFIGURATION_TOKEN,
@@ -12,12 +8,25 @@ import {
 import { ConfigChangeEvent } from './interfaces/config-change-event.interface.js';
 import { NoInferType, Parser, Path, PathValue } from './types/index.js';
 import { getDefaultParser } from './utils/index.js';
+import {
+  getProperty,
+  hasOwn,
+  hasProperty,
+  setProperty,
+} from './utils/property-path.util.js';
+import { readEnvFiles } from './utils/read-env-files.util.js';
 
 // Same syntax as in dotenv-expand: $KEY, ${KEY}, ${KEY:-default},
 // ${KEY:+alternative} (also without ":") and \$ for literal $. Nested defaults
 // (${A:-${B}}) are not supported
 const ENV_REFERENCE_REGEX =
   /\\\$|\$\{([^{}:+-]+)(?:(:?[-+])([^{}]*))?\}|\$([A-Za-z_]\w*)/g;
+
+// Longest value a variable may get when "set" expands it again. Without a
+// limit, a chain of variables that each reference the previous one twice
+// doubles in size at every step. A "NAME=value" string of this size can no
+// longer be passed to a child process on Linux (MAX_ARG_STRLEN)
+const MAX_EXPANDED_LENGTH = 128 * 1024;
 
 /**
  * `ValidatedResult<WasValidated, T>
@@ -68,18 +77,25 @@ export class ConfigService<
     return this._skipProcessEnv;
   }
 
-  private readonly cache: Partial<K> = {} as any;
+  // Keyed by the property path as it was passed to "get"
+  private readonly cache = new Map<KeyOf<K>, unknown>();
   private readonly _changes$ = new Subject<ConfigChangeEvent>();
   private _skipProcessEnv = false;
   private _isCacheEnabled = false;
   private envFilePaths: string[] = [];
+  private envFileConfig: Record<string, unknown> = {};
+  private expansionEnv?: Record<string, string | undefined>;
   private predefinedEnv = new Map<string, string | undefined>();
+  private loadedEnv?: Map<string, string | undefined>;
+  // Keys passed to "set", which keep their value when a variable they
+  // reference changes
+  private readonly explicitlySetKeys = new Set<string>();
   private parser: Parser = getDefaultParser();
 
   constructor(
     @Optional()
     @Inject(CONFIGURATION_TOKEN)
-    private readonly internalConfig: Record<string, any> = {},
+    private readonly internalConfig: Record<string | symbol, any> = {},
   ) {}
 
   /**
@@ -162,6 +178,12 @@ export class ConfigService<
         ? undefined
         : defaultValueOrOptions;
 
+    // Variable that validation mapped to "undefined" is not looked up in
+    // process.env, which may still hold its raw value
+    if (this.isRemovedByValidation(propertyPath)) {
+      return defaultValue as T;
+    }
+
     if (!this._skipProcessEnv) {
       const processEnvValue = this.getFromProcessEnv(
         propertyPath,
@@ -237,8 +259,7 @@ export class ConfigService<
   ): Exclude<T, undefined> {
     // @ts-expect-error Bypass method overloads
     const value = this.get(propertyPath, defaultValueOrOptions, options) as
-      | T
-      | undefined;
+      T | undefined;
 
     if (isUndefined(value)) {
       throw new TypeError(
@@ -255,11 +276,19 @@ export class ConfigService<
    */
   set<T = any>(propertyPath: KeyOf<K>, value: T): void {
     const oldValue = this.get(propertyPath);
-    set(this.internalConfig, propertyPath, value);
+    // Computed first, as it throws if a variable would grow too long
+    const interpolatedEnv =
+      typeof propertyPath === 'string'
+        ? this.getInterpolatedEnv(propertyPath, String(value))
+        : new Map<string, string>();
+    setProperty(this.internalConfig, propertyPath, value);
 
     if (typeof propertyPath === 'string') {
-      process.env[propertyPath] = String(value);
-      this.updateInterpolatedEnv(propertyPath);
+      this.explicitlySetKeys.add(propertyPath);
+      this.setEnv(propertyPath, String(value));
+      interpolatedEnv.forEach((updated, key) =>
+        this.setInterpolatedEnv(key, updated),
+      );
     }
 
     if (this.isCacheEnabled) {
@@ -274,51 +303,74 @@ export class ConfigService<
   }
   /**
    * Sets env file paths from `config.module.ts` to parse.
+   * The files are read once, when this method is called.
    * @param paths
+   * @deprecated `ConfigModule.forRoot()` passes the variables it loaded instead.
    */
   setEnvFilePaths(paths: string[]): void {
     this.envFilePaths = paths;
+    this.envFileConfig = readEnvFiles(paths, this.parser);
   }
 
   /**
    * Sets parser from `config.module.ts`.
    * @param parser
+   * @deprecated `ConfigModule.forRoot()` passes the variables it loaded instead.
    */
   setParser(parser: Parser): void {
     this.parser = parser;
+    this.envFileConfig = readEnvFiles(this.envFilePaths, parser);
+  }
+
+  private setEnvFileConfig(envFileConfig: Record<string, unknown>): void {
+    this.envFileConfig = envFileConfig;
+  }
+
+  private setExpansionEnv(
+    expansionEnv: Record<string, string | undefined> | undefined,
+  ): void {
+    this.expansionEnv = expansionEnv;
   }
 
   private getFromCache<T = any>(
     propertyPath: KeyOf<K>,
     defaultValue?: T,
   ): T | undefined {
-    const cachedValue = get(this.cache, propertyPath);
+    const cachedValue = this.cache.get(propertyPath);
     return isUndefined(cachedValue)
       ? defaultValue
       : (cachedValue as unknown as T);
   }
 
   private getFromValidatedEnv<T = any>(propertyPath: KeyOf<K>): T | undefined {
-    const validatedEnvValue = get(
+    const validatedEnvValue = getProperty(
       this.internalConfig[VALIDATED_ENV_PROPNAME],
       propertyPath,
     );
     return validatedEnvValue as unknown as T;
   }
 
+  private isRemovedByValidation(propertyPath: KeyOf<K>): boolean {
+    // "ConfigModule" only keeps an "undefined" value in the validated
+    // variables if the validator was given a value
+    return hasProperty(
+      this.internalConfig[VALIDATED_ENV_PROPNAME],
+      propertyPath,
+    );
+  }
+
   private getFromProcessEnv<T = any>(
     propertyPath: KeyOf<K>,
     defaultValue: any,
   ): T | undefined {
-    if (
-      this.isCacheEnabled &&
-      has(this.cache as Record<any, any>, propertyPath)
-    ) {
+    if (this.isCacheEnabled && this.cache.has(propertyPath)) {
       const cachedValue = this.getFromCache(propertyPath, defaultValue);
       return !isUndefined(cachedValue) ? cachedValue : defaultValue;
     }
-    const processValue = get(process.env, propertyPath);
-    this.setInCacheIfDefined(propertyPath, processValue);
+    const processValue = getProperty(process.env, propertyPath);
+    if (this.isCacheEnabled) {
+      this.setInCacheIfDefined(propertyPath, processValue);
+    }
 
     return processValue as unknown as T;
   }
@@ -326,15 +378,15 @@ export class ConfigService<
   private getFromInternalConfig<T = any>(
     propertyPath: KeyOf<K>,
   ): T | undefined {
-    const internalValue = get(this.internalConfig, propertyPath);
-    return internalValue;
+    const internalValue = getProperty(this.internalConfig, propertyPath);
+    return internalValue as T | undefined;
   }
 
   private setInCacheIfDefined(propertyPath: KeyOf<K>, value: any): void {
     if (typeof value === 'undefined') {
       return;
     }
-    set(this.cache as Record<any, any>, propertyPath, value);
+    this.cache.set(propertyPath, value);
   }
 
   private isGetOptionsObject(
@@ -345,38 +397,24 @@ export class ConfigService<
 
   private setPredefinedEnv(
     predefinedEnv: Map<string, string | undefined>,
+    loadedEnv?: Map<string, string | undefined>,
   ): void {
-    // Variable that already has its expanded env file value was loaded by an
-    // earlier "forRoot" (e.g. app bootstrapped again in the same process)
-    for (const [key, value] of Object.entries(this.readEnvFiles())) {
-      if (
-        typeof value === 'string' &&
-        predefinedEnv.get(key) === this.expandReferences(key, value)
-      ) {
-        predefinedEnv.delete(key);
-      }
-    }
     this.predefinedEnv = predefinedEnv;
+    this.loadedEnv = loadedEnv;
   }
 
-  private readEnvFiles(): Record<string, unknown> {
-    // First file wins, as on startup. Its keys come first, so that chains of
-    // references are updated in file order
-    const config: Record<string, unknown> = {};
-    for (const envFilePath of this.envFilePaths) {
-      if (fs.existsSync(envFilePath)) {
-        const parsed = this.parser(fs.readFileSync(envFilePath));
-        for (const [key, value] of Object.entries(parsed)) {
-          if (!Object.prototype.hasOwnProperty.call(config, key)) {
-            config[key] = value;
-          }
-        }
-      }
+  private setEnv(key: string, value: string): void {
+    process.env[key] = value;
+    if (this.expansionEnv) {
+      this.expansionEnv[key] = value;
     }
-    return config;
   }
 
-  private expandReferences(key: string, value: string): string {
+  private expandReferences(
+    key: string,
+    value: string,
+    lookup: (name: string) => string | undefined,
+  ): string {
     // Current values are inserted as is (unlike dotenv-expand, "$" inside of
     // them is not expanded again)
     return value.replace(
@@ -386,7 +424,7 @@ export class ConfigService<
           return '$';
         }
         const name = bracedKey ?? plainKey;
-        const current = name === key ? undefined : process.env[name];
+        const current = name === key ? undefined : lookup(name);
         if (operator.endsWith('+')) {
           return current ? alternative : '';
         }
@@ -395,17 +433,27 @@ export class ConfigService<
     );
   }
 
-  private updateInterpolatedEnv(propertyPath: string): void {
-    const config = this.readEnvFiles();
-    const changedKeys = new Set([propertyPath]);
-    const validatedEnv = this.internalConfig[VALIDATED_ENV_PROPNAME];
-    for (const [k, v] of Object.entries(config)) {
+  /**
+   * Returns the env file variables whose expanded value changes when
+   * "propertyPath" is set to "value", with their new value
+   */
+  private getInterpolatedEnv(
+    propertyPath: string,
+    value: string,
+  ): Map<string, string> {
+    const env = this.expansionEnv ?? process.env;
+    const updates = new Map([[propertyPath, value]]);
+    const lookup = (name: string) =>
+      updates.has(name) ? updates.get(name) : env[name];
+    for (const [k, v] of Object.entries(this.envFileConfig)) {
       // Value that was in process.env before env file was loaded wins, same
-      // as in dotenv-expand on startup
+      // as in dotenv-expand on startup. So does a value passed to "set" (by
+      // this or an earlier call), which is what "get" returns
       const predefined = this.predefinedEnv.get(k);
       if (
         typeof v !== 'string' ||
         k === propertyPath ||
+        this.explicitlySetKeys.has(k) ||
         (predefined && predefined !== v)
       ) {
         continue;
@@ -413,27 +461,42 @@ export class ConfigService<
       const references = [...v.matchAll(ENV_REFERENCE_REGEX)].map(
         ([, key, , , plainKey]) => key ?? plainKey,
       );
-      if (!references.some(ref => changedKeys.has(ref))) {
+      if (!references.some(ref => updates.has(ref))) {
         continue;
       }
-      const updated = this.expandReferences(k, v);
+      const updated = this.expandReferences(k, v, lookup);
       if (updated === process.env[k]) {
         continue;
       }
-      changedKeys.add(k);
-      process.env[k] = updated;
-      if (this.isCacheEnabled) {
-        this.setInCacheIfDefined(k as KeyOf<K>, updated);
+      if (updated.length > MAX_EXPANDED_LENGTH) {
+        throw new Error(
+          `Environment variable "${k}" is too long after variable expansion`,
+        );
       }
-      // Value converted by validation (e.g. to a number) is not replaced by a
-      // string, it isn't validated again
-      if (
-        validatedEnv &&
-        !Object.isFrozen(validatedEnv) &&
-        typeof get(validatedEnv, k) === 'string'
-      ) {
-        set(validatedEnv, k, updated);
-      }
+      updates.set(k, updated);
+    }
+    updates.delete(propertyPath);
+    return updates;
+  }
+
+  private setInterpolatedEnv(key: string, value: string): void {
+    this.setEnv(key, value);
+    // Not predefined for a later "forRoot" (e.g. app bootstrapped again)
+    this.loadedEnv?.set(key, value);
+    if (this.isCacheEnabled) {
+      this.setInCacheIfDefined(key as KeyOf<K>, value);
+    }
+    // Value converted by validation (e.g. to a number) is not replaced by a
+    // string, it isn't validated again. The variable name is used as is,
+    // never as a path
+    const validatedEnv = this.internalConfig[VALIDATED_ENV_PROPNAME];
+    if (
+      validatedEnv &&
+      !Object.isFrozen(validatedEnv) &&
+      hasOwn(validatedEnv, key) &&
+      typeof validatedEnv[key] === 'string'
+    ) {
+      validatedEnv[key] = value;
     }
   }
 }
