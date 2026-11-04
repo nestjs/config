@@ -118,6 +118,44 @@ describe('Environment variables override with expanded variables', () => {
     expect(processEnv.DERIVED_VAR).toBe('file_value_derived');
   });
 
+  it('should expand a self-reference to the previous value when "override" is true', async () => {
+    process.env.PLUGIN_PATH = '/usr/plugins';
+    const prependEnvFilePath = fileURLToPath(
+      new URL('.env.override-expand-prepend-test', import.meta.url),
+    );
+    fs.writeFileSync(
+      prependEnvFilePath,
+      [
+        'PLUGIN_PATH=/opt/app/plugins:$PLUGIN_PATH',
+        'WORKER_PLUGIN_PATH=/opt/worker/plugins:${PLUGIN_PATH}',
+      ].join('\n'),
+    );
+
+    try {
+      const moduleRef = await Test.createTestingModule({
+        imports: [
+          ConfigModule.forRoot({
+            envFilePath: prependEnvFilePath,
+            expandVariables: true,
+            override: true,
+          }),
+        ],
+      }).compile();
+      const configService = moduleRef.get(ConfigService);
+
+      expect(configService.get('PLUGIN_PATH')).toBe(
+        '/opt/app/plugins:/usr/plugins',
+      );
+      expect(configService.get('WORKER_PLUGIN_PATH')).toBe(
+        '/opt/worker/plugins:/opt/app/plugins:/usr/plugins',
+      );
+    } finally {
+      fs.unlinkSync(prependEnvFilePath);
+      delete process.env.PLUGIN_PATH;
+      delete process.env.WORKER_PLUGIN_PATH;
+    }
+  });
+
   it('should expand a self-reference when "override" is true', async () => {
     const selfReferenceEnvFilePath = fileURLToPath(
       new URL('.env.override-expand-self-reference-test', import.meta.url),

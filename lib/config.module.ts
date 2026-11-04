@@ -28,6 +28,22 @@ import {
   getDeclaredKeys,
   validateWithStandardSchema,
 } from './utils/validate-with-schema.util.js';
+import { ValidatedEnv } from './utils/validated-env.util.js';
+
+interface LoadedEnv {
+  envFileConfig: Record<string, any>;
+  predefinedEnv: Map<string, string | undefined>;
+  expandOptions: DotenvExpandOptions;
+  validatedEnv?: {
+    values: Record<string, any>;
+    hiddenKeys: Set<string>;
+    convertedKeys: Set<string>;
+  };
+}
+
+// Name under which "expandVariables" passes the value a variable had before
+// the env file was loaded, for the variable's references to itself
+const PREVIOUS_VALUE_PREFIX = 'NESTJS_CONFIG_PREVIOUS_VALUE_OF_';
 
 /**
  * @publicApi
@@ -60,17 +76,17 @@ export class ConfigModule {
    * When "ignoreEnvFile" is set to true, then it will resolve immediately after the
    * "ConfigModule#forRoot" method is called.
    * If "forRoot" is called more than once, it resolves once every call that is
-   * in progress has completed.
+   * in progress has loaded its environment variables.
    */
   public static get envVariablesLoaded(): Promise<void> {
-    return this._envVariablesLoaded.then(() => this.waitForPendingForRoot());
+    return this._envVariablesLoaded.then(() => this.waitForPendingEnvLoads());
   }
 
   private static environmentVariablesLoadedSignal: () => void;
   private static readonly _envVariablesLoaded = new Promise<void>(
     resolve => (ConfigModule.environmentVariablesLoadedSignal = resolve),
   );
-  private static readonly pendingForRootCalls = new Set<Promise<unknown>>();
+  private static readonly pendingEnvLoads = new Set<Promise<unknown>>();
   // Variables that "forRoot" (or "ConfigService#set") wrote to process.env,
   // with the value they were given
   private static readonly loadedEnv = new Map<string, string | undefined>();
@@ -83,13 +99,16 @@ export class ConfigModule {
   static async forRoot(
     options: ConfigModuleOptions = {},
   ): Promise<DynamicModule> {
-    const loading = this.loadForRoot(options);
-    this.pendingForRootCalls.add(loading);
+    const loadingEnv = this.loadEnv(options);
+    this.pendingEnvLoads.add(loadingEnv);
+    let loadedEnv: LoadedEnv;
     try {
-      return await loading;
+      loadedEnv = await loadingEnv;
     } finally {
-      this.pendingForRootCalls.delete(loading);
+      this.pendingEnvLoads.delete(loadingEnv);
     }
+    this.environmentVariablesLoadedSignal();
+    return this.createDynamicModule(options, loadedEnv);
   }
 
   /**
@@ -137,9 +156,9 @@ export class ConfigModule {
     };
   }
 
-  private static async loadForRoot(
+  private static async loadEnv(
     options: ConfigModuleOptions,
-  ): Promise<DynamicModule> {
+  ): Promise<LoadedEnv> {
     const envFilePaths = Array.isArray(options.envFilePath)
       ? options.envFilePath
       : [options.envFilePath || resolve(process.cwd(), '.env')];
@@ -164,12 +183,14 @@ export class ConfigModule {
     let config: Record<string, any> = { ...envFileConfig };
     // Predefined variable that is empty is replaced by the expanded value from
     // the env file, same as in dotenv-expand
-    let replaceableKeys: string[] = [];
+    let replaceableKeys = new Set<string>();
     if (options.expandVariables) {
       config = this.expandVariables(config, expandOptions, options.override);
-      replaceableKeys = options.override
-        ? []
-        : Object.keys(config).filter(key => process.env[key] === '');
+      replaceableKeys = new Set(
+        options.override
+          ? []
+          : Object.keys(config).filter(key => process.env[key] === ''),
+      );
     }
     const fileKeys = new Set(Object.keys(config));
     const env: Record<string, string | undefined> = { ...process.env };
@@ -213,31 +234,45 @@ export class ConfigModule {
       );
     }
 
-    let convertedKeys = new Set<string>();
+    let validatedEnv: LoadedEnv['validatedEnv'];
     if (isObject(validatedEnvConfig)) {
-      validatedEnvConfig = this.createValidatedEnv(
-        validatedEnvConfig,
-        input,
-        // Unless predefined variables are validated, "get" returns them as
-        // they are, not the values from the env file that they take
-        // precedence over (unless it skips process.env)
-        !validatePredefined && !options.override && !options.skipProcessEnv
-          ? [...predefinedEnv.keys()].filter(
-              key => !replaceableKeys.includes(key),
-            )
-          : [],
-      );
-      convertedKeys = this.getConvertedKeys(validatedEnvConfig, input);
+      const hiddenKeys = new Set<string>();
+      for (const key of Object.keys(validatedEnvConfig)) {
+        // "undefined" is a removal only if the validator was given a value
+        if (validatedEnvConfig[key] === undefined && input[key] === undefined) {
+          hiddenKeys.add(key);
+        }
+      }
+      // Unless predefined variables are validated, "get" returns them as
+      // they are, not the different values from the env file that they take
+      // precedence over (unless it skips process.env)
+      if (!validatePredefined && !options.override && !options.skipProcessEnv) {
+        for (const [key, value] of predefinedEnv) {
+          if (!replaceableKeys.has(key) && value !== input[key]) {
+            hiddenKeys.add(key);
+          }
+        }
+      }
+      validatedEnv = {
+        values: validatedEnvConfig,
+        hiddenKeys,
+        convertedKeys: this.getConvertedKeys(validatedEnvConfig, input),
+      };
       this.assignVariablesToProcess(
         validatedEnvConfig,
         options.override,
         replaceableKeys,
       );
     } else {
-      validatedEnvConfig = undefined;
       this.assignVariablesToProcess(config, options.override, replaceableKeys);
     }
+    return { envFileConfig, predefinedEnv, expandOptions, validatedEnv };
+  }
 
+  private static async createDynamicModule(
+    options: ConfigModuleOptions,
+    { envFileConfig, predefinedEnv, expandOptions, validatedEnv }: LoadedEnv,
+  ): Promise<DynamicModule> {
     const isConfigToLoad = options.load && options.load.length;
     const configFactory = await Promise.all(options.load || []);
     const configProviders = configFactory
@@ -262,15 +297,15 @@ export class ConfigModule {
         inject: [CONFIGURATION_TOKEN, ...configProviderTokens],
       });
     }
-    if (validatedEnvConfig) {
-      const ownValidatedEnv = validatedEnvConfig;
+    if (validatedEnv) {
       providers.push({
         provide: VALIDATED_ENV_LOADER,
         useFactory: (host: Record<string | symbol, any>) => {
-          const stored = host[VALIDATED_ENV_PROPNAME];
-          host[VALIDATED_ENV_PROPNAME] = stored
-            ? this.mergeValidatedEnv(stored, ownValidatedEnv, convertedKeys)
-            : ownValidatedEnv;
+          (host[VALIDATED_ENV_PROPNAME] ??= new ValidatedEnv()).add(
+            validatedEnv.values,
+            validatedEnv.hiddenKeys,
+            validatedEnv.convertedKeys,
+          );
         },
         inject: [CONFIGURATION_TOKEN],
       });
@@ -305,11 +340,9 @@ export class ConfigModule {
         CONFIGURATION_SERVICE_TOKEN,
         CONFIGURATION_LOADED,
         ...(isConfigToLoad ? [CONFIGURATION_LOADER] : []),
-        ...(validatedEnvConfig ? [VALIDATED_ENV_LOADER] : []),
+        ...(validatedEnv ? [VALIDATED_ENV_LOADER] : []),
       ],
     });
-
-    this.environmentVariablesLoadedSignal();
 
     return {
       module: ConfigModule,
@@ -320,9 +353,9 @@ export class ConfigModule {
     };
   }
 
-  private static async waitForPendingForRoot(): Promise<void> {
-    while (this.pendingForRootCalls.size > 0) {
-      await Promise.allSettled(this.pendingForRootCalls);
+  private static async waitForPendingEnvLoads(): Promise<void> {
+    while (this.pendingEnvLoads.size > 0) {
+      await Promise.allSettled(this.pendingEnvLoads);
     }
   }
 
@@ -341,8 +374,22 @@ export class ConfigModule {
       // present in "processEnv" over the ones parsed from the file, which
       // would silently undo the "override" option. The variables the file
       // defines are removed from the copy, so that they are expanded from the
-      // file instead (and a self-reference doesn't expand forever)
-      Object.keys(config).forEach(key => delete processEnv[key]);
+      // file instead (and a self-reference doesn't expand forever). A
+      // variable's references to itself still mean the value it had before
+      // (e.g. "PATH=/opt/bin:$PATH"), under another name
+      for (const key of Object.keys(config)) {
+        const previousValue = processEnv[key];
+        delete processEnv[key];
+        if (typeof config[key] !== 'string' || previousValue === undefined) {
+          continue;
+        }
+        const alias = `${PREVIOUS_VALUE_PREFIX}${key}`;
+        const value = this.renameSelfReferences(config[key], key, alias);
+        if (value !== config[key]) {
+          config[key] = value;
+          processEnv[alias] = previousValue;
+        }
+      }
     }
     const expanded =
       expand({ ...expandOptions, parsed: config, processEnv }).parsed || config;
@@ -382,32 +429,6 @@ export class ConfigModule {
   }
 
   /**
-   * Returns a copy of the validator's output to be served by
-   * `ConfigService#get`. A variable that the validator maps to `undefined`
-   * stays in it, so that `get` doesn't fall back to its raw value in
-   * process.env.
-   */
-  private static createValidatedEnv(
-    output: Record<string, any>,
-    input: Record<string, any>,
-    removedKeys: string[],
-  ): Record<string, any> {
-    const validatedEnv: Record<string, any> = Object.assign(
-      Object.create(Object.getPrototypeOf(output)),
-      output,
-    );
-    for (const key of Object.keys(validatedEnv)) {
-      if (validatedEnv[key] === undefined && input[key] === undefined) {
-        delete validatedEnv[key];
-      }
-    }
-    for (const key of removedKeys) {
-      delete validatedEnv[key];
-    }
-    return validatedEnv;
-  }
-
-  /**
    * Returns the variables the validator converted (or added), as opposed to
    * the ones it passed through as they were
    */
@@ -423,32 +444,36 @@ export class ConfigModule {
   }
 
   /**
-   * Merges the validated variables of another "forRoot" into the stored ones.
-   * Values a validator converted win, values it only passed through (e.g.
-   * the raw form of a variable that another schema converted) don't replace
-   * what is stored.
+   * Replaces the references a value makes to its own variable ("key") with
+   * references to "alias", in the syntax of dotenv-expand
    */
-  private static mergeValidatedEnv(
-    stored: Record<string, any>,
-    validatedEnv: Record<string, any>,
-    convertedKeys: Set<string>,
-  ): Record<string, any> {
-    const merged: Record<string, any> = Object.assign(
-      Object.create(Object.getPrototypeOf(stored)),
-      stored,
-    );
-    for (const [key, value] of Object.entries(validatedEnv)) {
-      if (convertedKeys.has(key) || !hasOwn(merged, key)) {
-        merged[key] = value;
-      }
+  private static renameSelfReferences(
+    value: string,
+    key: string,
+    alias: string,
+  ): string {
+    // Names with an operator character can't be referenced as a whole
+    if (/[:+-]/.test(key)) {
+      return value;
     }
-    return merged;
+    const name = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    let renamed = value.replace(
+      new RegExp(`(?<!\\\\)\\$\\{${name}(?=[:+}-])`, 'g'),
+      () => `\${${alias}`,
+    );
+    if (/^[A-Za-z_]\w*$/.test(key)) {
+      renamed = renamed.replace(
+        new RegExp(`(?<!\\\\)\\$${name}(?!\\w)`, 'g'),
+        () => `\${${alias}}`,
+      );
+    }
+    return renamed;
   }
 
   private static assignVariablesToProcess(
     config: Record<string, unknown>,
     override?: boolean,
-    replaceableKeys: string[] = [],
+    replaceableKeys = new Set<string>(),
   ): void {
     if (!isObject(config)) {
       return;
@@ -456,7 +481,7 @@ export class ConfigModule {
     const keys = override
       ? Object.keys(config)
       : Object.keys(config).filter(
-          key => !(key in process.env) || replaceableKeys.includes(key),
+          key => !(key in process.env) || replaceableKeys.has(key),
         );
 
     keys.forEach(key => {

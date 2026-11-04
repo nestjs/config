@@ -78,6 +78,15 @@ describe('Property paths', () => {
     expect(configService.get('features.beta')).toBe(true);
   });
 
+  it('should not resolve members inherited by buffers', async () => {
+    const configService = await createConfigService({
+      load: [registerAs('tls', () => ({ cert: Buffer.from('cert') }))],
+    });
+
+    expect(configService.get('tls.cert.toString')).toBeUndefined();
+    expect(configService.get('tls.cert.0')).toBe('c'.charCodeAt(0));
+  });
+
   it('should resolve members of class instances', async () => {
     class DatabaseConfig {
       host = 'localhost';

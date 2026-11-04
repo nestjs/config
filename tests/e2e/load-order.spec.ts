@@ -125,4 +125,36 @@ describe('Load order', () => {
     expect(process.env.ENABLE_DEBUG).toBe('false');
     expect(() => moduleRef.get(DebugService)).toThrow();
   });
+
+  it('should not make "registerWhen" wait for slow "load" factories', async () => {
+    @Injectable()
+    class DebugService {}
+
+    @Module({ providers: [DebugService], exports: [DebugService] })
+    class DebugModule {}
+
+    const uncaughtErrors: unknown[] = [];
+    const onUncaughtException = (error: unknown) => uncaughtErrors.push(error);
+    process.prependListener('uncaughtException', onUncaughtException);
+    try {
+      const moduleRef = await Test.createTestingModule({
+        imports: [
+          ConditionalModule.registerWhen(DebugModule, 'ENABLE_DEBUG', {
+            timeout: 50,
+            debug: false,
+          }),
+          ConfigModule.forRoot({
+            envFilePath,
+            // e.g. a factory imported dynamically
+            load: [delay(150).then(() => () => ({}))],
+          }),
+        ],
+      }).compile();
+
+      expect(() => moduleRef.get(DebugService)).toThrow();
+      expect(uncaughtErrors).toEqual([]);
+    } finally {
+      process.removeListener('uncaughtException', onUncaughtException);
+    }
+  });
 });

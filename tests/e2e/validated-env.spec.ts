@@ -182,6 +182,37 @@ describe('Validated environment variables', () => {
     expect(configService.get('NODE_ENV')).toBe('development');
   });
 
+  it('should serve the members of a class instance returned by "validate"', async () => {
+    process.env.PORT = '3000';
+    class EnvironmentVariables {
+      readonly #port: number;
+      constructor(config: Record<string, any>) {
+        this.#port = Number(config.PORT);
+      }
+      get PORT() {
+        return this.#port;
+      }
+    }
+    const configService = await createConfigService({
+      ignoreEnvFile: true,
+      validate: config => new EnvironmentVariables(config),
+    });
+
+    expect(configService.get('PORT')).toBe(3000);
+  });
+
+  it('should serve the converted value of a predefined variable that equals the env file value', async () => {
+    process.env.PORT = '3000';
+    const envFilePath = writeEnvFile('.env', ['PORT=3000']);
+    const configService = await createConfigService({
+      envFilePath,
+      validatePredefined: false,
+      validationSchema: z.object({ PORT: z.coerce.number() }),
+    });
+
+    expect(configService.get('PORT')).toBe(3000);
+  });
+
   describe('async "validate" function', () => {
     it('should serve the variables it resolves with', async () => {
       process.env.PORT = '3000';

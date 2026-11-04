@@ -117,6 +117,22 @@ describe('Setting variables referenced by expanded env file variables', () => {
     );
   });
 
+  it('should not treat a value passed to "set" as predefined when the app is bootstrapped again', async () => {
+    const envFilePath = writeEnvFile([
+      'API_HOST=api.myapp.test',
+      'API_URL=https://${API_HOST}/v1',
+    ]);
+    const firstConfigService = await createConfigService({ envFilePath });
+    firstConfigService.set('API_URL', 'https://gateway.internal/v1');
+
+    const secondConfigService = await createConfigService({ envFilePath });
+    secondConfigService.set('API_HOST', 'api2.myapp.test');
+
+    expect(secondConfigService.get('API_URL')).toBe(
+      'https://api2.myapp.test/v1',
+    );
+  });
+
   it('should expand against a custom "processEnv" target', async () => {
     process.env.URL = 'process-app.test';
     const configService = await createConfigService({

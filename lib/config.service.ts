@@ -8,13 +8,9 @@ import {
 import { ConfigChangeEvent } from './interfaces/config-change-event.interface.js';
 import { NoInferType, Parser, Path, PathValue } from './types/index.js';
 import { getDefaultParser } from './utils/index.js';
-import {
-  getProperty,
-  hasOwn,
-  hasProperty,
-  setProperty,
-} from './utils/property-path.util.js';
+import { getProperty, setProperty } from './utils/property-path.util.js';
 import { readEnvFiles } from './utils/read-env-files.util.js';
+import { ValidatedEnv } from './utils/validated-env.util.js';
 
 // Same syntax as in dotenv-expand: $KEY, ${KEY}, ${KEY:-default},
 // ${KEY:+alternative} (also without ":") and \$ for literal $. Nested defaults
@@ -168,20 +164,19 @@ export class ConfigService<
       return internalValue;
     }
 
-    const validatedEnvValue = this.getFromValidatedEnv(propertyPath);
-    if (!isUndefined(validatedEnvValue)) {
-      return validatedEnvValue;
-    }
     const defaultValue =
       this.isGetOptionsObject(defaultValueOrOptions as Record<string, any>) &&
       !options
         ? undefined
         : defaultValueOrOptions;
 
-    // Variable that validation mapped to "undefined" is not looked up in
-    // process.env, which may still hold its raw value
-    if (this.isRemovedByValidation(propertyPath)) {
-      return defaultValue as T;
+    const validatedEnvValue = this.validatedEnv?.resolve(propertyPath);
+    if (validatedEnvValue?.found) {
+      // Variable that validation mapped to "undefined" is not looked up in
+      // process.env, which may still hold its raw value
+      return isUndefined(validatedEnvValue.value)
+        ? (defaultValue as T)
+        : (validatedEnvValue.value as T);
     }
 
     if (!this._skipProcessEnv) {
@@ -286,6 +281,8 @@ export class ConfigService<
     if (typeof propertyPath === 'string') {
       this.explicitlySetKeys.add(propertyPath);
       this.setEnv(propertyPath, String(value));
+      // Not predefined for a later "forRoot" (e.g. app bootstrapped again)
+      this.loadedEnv?.set(propertyPath, String(value));
       interpolatedEnv.forEach((updated, key) =>
         this.setInterpolatedEnv(key, updated),
       );
@@ -342,21 +339,8 @@ export class ConfigService<
       : (cachedValue as unknown as T);
   }
 
-  private getFromValidatedEnv<T = any>(propertyPath: KeyOf<K>): T | undefined {
-    const validatedEnvValue = getProperty(
-      this.internalConfig[VALIDATED_ENV_PROPNAME],
-      propertyPath,
-    );
-    return validatedEnvValue as unknown as T;
-  }
-
-  private isRemovedByValidation(propertyPath: KeyOf<K>): boolean {
-    // "ConfigModule" only keeps an "undefined" value in the validated
-    // variables if the validator was given a value
-    return hasProperty(
-      this.internalConfig[VALIDATED_ENV_PROPNAME],
-      propertyPath,
-    );
+  private get validatedEnv(): ValidatedEnv | undefined {
+    return this.internalConfig[VALIDATED_ENV_PROPNAME];
   }
 
   private getFromProcessEnv<T = any>(
@@ -486,17 +470,6 @@ export class ConfigService<
     if (this.isCacheEnabled) {
       this.setInCacheIfDefined(key as KeyOf<K>, value);
     }
-    // Value converted by validation (e.g. to a number) is not replaced by a
-    // string, it isn't validated again. The variable name is used as is,
-    // never as a path
-    const validatedEnv = this.internalConfig[VALIDATED_ENV_PROPNAME];
-    if (
-      validatedEnv &&
-      !Object.isFrozen(validatedEnv) &&
-      hasOwn(validatedEnv, key) &&
-      typeof validatedEnv[key] === 'string'
-    ) {
-      validatedEnv[key] = value;
-    }
+    this.validatedEnv?.update(key, value);
   }
 }

@@ -7,20 +7,42 @@ import toPath from 'es-toolkit/compat/toPath';
  * from user input can neither read nor write a built-in
  */
 const SHARED_PROTOTYPES = new Set<object>([
-  Object.prototype,
-  Function.prototype,
-  Array.prototype,
-  String.prototype,
-  Number.prototype,
-  Boolean.prototype,
-  Symbol.prototype,
-  BigInt.prototype,
-  Date.prototype,
-  RegExp.prototype,
-  Error.prototype,
-  Map.prototype,
-  Set.prototype,
-  Promise.prototype,
+  ...[
+    Object,
+    Function,
+    Array,
+    String,
+    Number,
+    Boolean,
+    Symbol,
+    BigInt,
+    Date,
+    RegExp,
+    Error,
+    Map,
+    Set,
+    WeakMap,
+    WeakSet,
+    Promise,
+    ArrayBuffer,
+    SharedArrayBuffer,
+    DataView,
+    Int8Array,
+    Uint8Array,
+    Uint8ClampedArray,
+    Int16Array,
+    Uint16Array,
+    Int32Array,
+    Uint32Array,
+    Float32Array,
+    Float64Array,
+    BigInt64Array,
+    BigUint64Array,
+    Buffer,
+  ].map(constructor => constructor.prototype as object),
+  // %TypedArray%.prototype and %IteratorPrototype%
+  Object.getPrototypeOf(Uint8Array.prototype),
+  Object.getPrototypeOf(Object.getPrototypeOf([][Symbol.iterator]())),
 ]);
 
 const UNSAFE_KEYS = new Set<PropertyKey>([
@@ -52,6 +74,16 @@ function isReachable(target: object, key: PropertyKey): boolean {
   return !!owner && !SHARED_PROTOTYPES.has(owner);
 }
 
+/**
+ * Returns the first key of a property path (e.g. "database" for
+ * "database.host"), or the path itself if "object" has it as a key.
+ */
+export function getRootKey(object: unknown, path: PropertyKey): PropertyKey {
+  return object === null || object === undefined
+    ? path
+    : toSegments(Object(object), path)[0];
+}
+
 function toSegments(object: object, path: PropertyKey): PropertyKey[] {
   // Key that exists as is (e.g. "A.B" in process.env) is not split, same as
   // in "es-toolkit"
@@ -75,14 +107,10 @@ export function getProperty(object: unknown, path: PropertyKey): unknown {
 }
 
 /**
- * Returns whether a property path (e.g. "database.host") exists in "object",
- * even if its value is `undefined`.
+ * Resolves a property path (e.g. "database.host") against "object". "found"
+ * tells a path whose value is `undefined` from one that doesn't exist.
  */
-export function hasProperty(object: unknown, path: PropertyKey): boolean {
-  return resolveProperty(object, path).found;
-}
-
-function resolveProperty(
+export function resolveProperty(
   object: unknown,
   path: PropertyKey,
 ): { found: boolean; value: unknown } {
