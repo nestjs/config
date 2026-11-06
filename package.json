@@ -1,6 +1,6 @@
 {
   "name": "@nestjs/config",
-  "version": "12.1.0",
+  "version": "12.1.1",
   "type": "module",
   "description": "Configuration for NestJS: load .env files and custom configuration, validate it at startup, and read it through an injectable ConfigService.",
   "keywords": [
