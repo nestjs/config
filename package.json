@@ -2,7 +2,17 @@
   "name": "@nestjs/config",
   "version": "12.1.0",
   "type": "module",
-  "description": "Nest - modern, fast, powerful node.js web framework (@config)",
+  "description": "Configuration for NestJS: load .env files and custom configuration, validate it at startup, and read it through an injectable ConfigService.",
+  "keywords": [
+    "nestjs",
+    "nest",
+    "config",
+    "configuration",
+    "dotenv",
+    "env",
+    "environment-variables",
+    "settings"
+  ],
   "author": "Kamil Mysliwiec",
   "license": "MIT",
   "url": "https://github.com/nestjs/config#readme",
