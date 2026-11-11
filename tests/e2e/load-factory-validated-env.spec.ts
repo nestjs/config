@@ -1,3 +1,4 @@
+import { Module } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import Joi from 'joi';
 import { z } from 'zod/v4';
@@ -138,6 +139,22 @@ describe('Validated environment variables in load factories', () => {
         ),
       ],
     }).compile();
+    expect(received).toBeUndefined();
+  });
+
+  it('should not be passed to an asProvider() factory', async () => {
+    let received: unknown = 'not called';
+    const feature = registerAs('feature', env => {
+      received = env;
+      return {};
+    });
+    const { imports, ...provider } = feature.asProvider();
+    @Module({
+      imports: [ConfigModule.forRoot({ ignoreEnvFile: true }), ...imports],
+      providers: [{ provide: 'FEATURE', ...provider }],
+    })
+    class FeatureModule {}
+    await Test.createTestingModule({ imports: [FeatureModule] }).compile();
     expect(received).toBeUndefined();
   });
 });
