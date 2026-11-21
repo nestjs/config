@@ -9,10 +9,11 @@ import { ConfigFactoryKeyHost } from './register-as.util.js';
  */
 export function createConfigProvider(
   factory: ConfigFactory & ConfigFactoryKeyHost,
+  envToken?: symbol,
 ): FactoryProvider {
   return {
     provide: factory.KEY || getConfigToken(randomUUID()),
     useFactory: factory,
-    inject: [],
+    inject: envToken ? [envToken] : [],
   };
 }

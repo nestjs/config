@@ -1,5 +1,5 @@
 import { DynamicModule, Module } from '@nestjs/common';
-import { FactoryProvider } from '@nestjs/common/interfaces/index.js';
+import { FactoryProvider, Provider } from '@nestjs/common/interfaces/index.js';
 import { isObject } from '@nestjs/common/utils/shared.utils.js';
 import { DotenvExpandOptions, expand } from 'dotenv-expand';
 import { resolve } from 'path';
@@ -13,6 +13,7 @@ import {
   CONFIGURATION_LOADER,
   CONFIGURATION_SERVICE_TOKEN,
   CONFIGURATION_TOKEN,
+  LOAD_FACTORY_ENV,
   VALIDATED_ENV_LOADER,
   VALIDATED_ENV_PROPNAME,
 } from './config.constants.js';
@@ -277,13 +278,21 @@ export class ConfigModule {
     const configFactory = await Promise.all(options.load || []);
     const configProviders = configFactory
       .map(factory =>
-        createConfigProvider(factory as ConfigFactory & ConfigFactoryKeyHost),
+        createConfigProvider(
+          factory as ConfigFactory & ConfigFactoryKeyHost,
+          LOAD_FACTORY_ENV,
+        ),
       )
       .filter(item => item);
 
     const configProviderTokens = configProviders.map(item => item.provide);
-    const providers: FactoryProvider[] = [...configProviders];
+    const providers: Provider[] = [...configProviders];
     if (isConfigToLoad) {
+      // What "load" factories get as their argument
+      providers.push({
+        provide: LOAD_FACTORY_ENV,
+        useValue: validatedEnv?.values ?? process.env,
+      });
       providers.push({
         provide: CONFIGURATION_LOADER,
         useFactory: (
