@@ -8,7 +8,11 @@ import {
 import { ConfigChangeEvent } from './interfaces/config-change-event.interface.js';
 import { NoInferType, Parser, Path, PathValue } from './types/index.js';
 import { getDefaultParser } from './utils/index.js';
-import { getProperty, setProperty } from './utils/property-path.util.js';
+import {
+  getProperty,
+  hasOwn,
+  setProperty,
+} from './utils/property-path.util.js';
 import { readEnvFiles } from './utils/read-env-files.util.js';
 import { ValidatedEnv } from './utils/validated-env.util.js';
 
@@ -80,6 +84,8 @@ export class ConfigService<
   private _isCacheEnabled = false;
   private envFilePaths: string[] = [];
   private envFileConfig: Record<string, unknown> = {};
+  // Env file definitions of each "forRoot" call, by the order of the calls
+  private readonly envFileConfigs = new Map<number, Record<string, unknown>>();
   private expansionEnv?: Record<string, string | undefined>;
   private predefinedEnv = new Map<string, string | undefined>();
   private loadedEnv?: Map<string, string | undefined>;
@@ -319,8 +325,24 @@ export class ConfigService<
     this.envFileConfig = readEnvFiles(this.envFilePaths, parser);
   }
 
-  private setEnvFileConfig(envFileConfig: Record<string, unknown>): void {
-    this.envFileConfig = envFileConfig;
+  private addEnvFileConfig(
+    envFileConfig: Record<string, unknown>,
+    callIndex: number,
+  ): void {
+    this.envFileConfigs.set(callIndex, envFileConfig);
+    // A variable that several env files define keeps the definition of the
+    // first "forRoot" call, which is the one that was loaded
+    const merged: Record<string, unknown> = {};
+    for (const index of [...this.envFileConfigs.keys()].sort((a, b) => a - b)) {
+      for (const [key, value] of Object.entries(
+        this.envFileConfigs.get(index)!,
+      )) {
+        if (!hasOwn(merged, key)) {
+          merged[key] = value;
+        }
+      }
+    }
+    this.envFileConfig = merged;
   }
 
   private setExpansionEnv(

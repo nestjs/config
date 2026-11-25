@@ -1,3 +1,4 @@
+import { Module } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import * as fs from 'fs';
 import { tmpdir } from 'os';
@@ -149,4 +150,34 @@ describe('Setting variables referenced by expanded env file variables', () => {
 
     expect(configService.get('API_URL')).toBe('http://myapp.test:4000');
   });
+  it.each(['after', 'before'])(
+    'should update expanded variables when another "forRoot" is imported %s the expanding one',
+    async position => {
+      const expandingModule = ConfigModule.forRoot({
+        envFilePath: writeEnvFile(['HOST=localhost', 'URL=http://${HOST}/api']),
+        expandVariables: true,
+      });
+      const otherEnvFilePath = join(tmpDir, 'other.env');
+      fs.writeFileSync(otherEnvFilePath, 'OTHER=1');
+      const otherModule = ConfigModule.forRoot({
+        envFilePath: otherEnvFilePath,
+      });
+      @Module({
+        imports:
+          position === 'after'
+            ? [expandingModule, otherModule]
+            : [otherModule, expandingModule],
+      })
+      class AppModule {}
+      const moduleRef = await Test.createTestingModule({
+        imports: [AppModule],
+      }).compile();
+      const configService = moduleRef.get(ConfigService);
+
+      configService.set('HOST', 'example.com');
+
+      expect(configService.get('URL')).toBe('http://example.com/api');
+      expect(process.env.URL).toBe('http://example.com/api');
+    },
+  );
 });
