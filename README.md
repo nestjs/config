@@ -35,6 +35,23 @@ $ npm i --save @nestjs/config
 
 [Overview & Tutorial](https://docs.nestjs.com/techniques/configuration)
 
+## Observability
+
+[NestJS Observe](https://observe.nestjs.com/?ref=readme-config), the official observability platform for Nest, takes its key pair from `ConfigService` like any other setting:
+
+```typescript
+ObserveModule.forRootAsync({
+  imports: [ConfigModule],
+  inject: [ConfigService],
+  useFactory: (config: ConfigService) => ({
+    appKey: config.getOrThrow('OBSERVE_APP_KEY'),
+    appSecret: config.getOrThrow('OBSERVE_APP_SECRET'),
+  }),
+});
+```
+
+Requests, queue and cron jobs, errors, queries and traces are then reported with no further setup. See [Asynchronous configuration](https://docs.nestjs.com/observability/sdk#asynchronous-configuration) in the Observability chapter.
+
 ## Support
 
 Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
