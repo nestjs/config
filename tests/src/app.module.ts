@@ -47,7 +47,7 @@ export class AppModule {
 
   /**
    * This method is not meant to be used anywhere! It just here for testing
-   * types definitions while runnnig test suites (in some sort).
+   * types definitions while running test suites (in some sort).
    * If some typings doesn't follows the requirements, Jest will fail due to
    * TypeScript errors.
    */
@@ -59,7 +59,7 @@ export class AppModule {
     const knowConfig =
       this.configServiceNarrowed.get<Config['database']>('database');
     // Assert
-    // We don't need type assertions bellow anymore since `knowConfig` is not
+    // We don't need type assertions below anymore since `knowConfig` is not
     // expected to be `undefined` beforehand.
     identityString(knowConfig.host);
     identityNumber(knowConfig.port);
