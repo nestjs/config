@@ -330,13 +330,16 @@ export class ConfigModule {
 
         // Env file definitions are only used by "set", to update expanded
         // variables. They are the ones loaded (and validated) here, the files
-        // are not read again. Every "forRoot" call of the app adds its own
-        untypedConfigService.addEnvFileConfig(
-          options.expandVariables ? envFileConfig : {},
-          callIndex,
-        );
-        untypedConfigService.setExpansionEnv(expandOptions.processEnv);
-        untypedConfigService.setPredefinedEnv(predefinedEnv, this.loadedEnv);
+        // are not read again. Every "forRoot" call of the app adds its own,
+        // with its settings
+        untypedConfigService.addEnvSource(callIndex, {
+          envFileConfig,
+          expand: !!options.expandVariables,
+          override: !!options.override,
+          expansionEnv: expandOptions.processEnv,
+          predefinedEnv,
+        });
+        untypedConfigService.setLoadedEnv(this.loadedEnv);
         configLoaded.resolve();
         return configService;
       },
