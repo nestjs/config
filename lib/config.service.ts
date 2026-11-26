@@ -24,6 +24,17 @@ const ENV_REFERENCE_REGEX =
 // longer be passed to a child process on Linux (MAX_ARG_STRLEN)
 const MAX_EXPANDED_LENGTH = 128 * 1024;
 
+// What a "forRoot" call loaded, which "set" needs to expand its variables again
+interface EnvSource {
+  envFileConfig: Record<string, unknown>;
+  expand: boolean;
+  override: boolean;
+  // "expandVariables.processEnv" of the call
+  expansionEnv?: Record<string, string | undefined>;
+  // Variables that were in process.env before the call loaded its env files
+  predefinedEnv: Map<string, string | undefined>;
+}
+
 /**
  * `ValidatedResult<WasValidated, T>
  *
@@ -79,9 +90,10 @@ export class ConfigService<
   private _skipProcessEnv = false;
   private _isCacheEnabled = false;
   private envFilePaths: string[] = [];
-  private envFileConfig: Record<string, unknown> = {};
-  private expansionEnv?: Record<string, string | undefined>;
-  private predefinedEnv = new Map<string, string | undefined>();
+  // Env file read by the deprecated "setEnvFilePaths"
+  private envFileConfig?: Record<string, unknown>;
+  // What each "forRoot" call loaded, by the order of the calls
+  private readonly envSources = new Map<number, EnvSource>();
   private loadedEnv?: Map<string, string | undefined>;
   // Keys passed to "set", which keep their value when a variable they
   // reference changes
@@ -316,17 +328,49 @@ export class ConfigService<
    */
   setParser(parser: Parser): void {
     this.parser = parser;
-    this.envFileConfig = readEnvFiles(this.envFilePaths, parser);
+    if (this.envFileConfig) {
+      this.envFileConfig = readEnvFiles(this.envFilePaths, parser);
+    }
   }
 
-  private setEnvFileConfig(envFileConfig: Record<string, unknown>): void {
-    this.envFileConfig = envFileConfig;
+  private addEnvSource(callIndex: number, source: EnvSource): void {
+    this.envSources.set(callIndex, source);
   }
 
-  private setExpansionEnv(
-    expansionEnv: Record<string, string | undefined> | undefined,
-  ): void {
-    this.expansionEnv = expansionEnv;
+  /**
+   * Returns the env file definition that each variable was loaded from, with
+   * the "forRoot" call that loaded it: the first call whose env file defines
+   * it, unless a later call with "override" redefines it
+   */
+  private getEnvFileDefinitions(): Map<string, [unknown, EnvSource]> {
+    const sources = [...this.envSources.entries()]
+      .sort(([a], [b]) => a - b)
+      .map(([, source]) => source);
+    const definitions = new Map<string, [unknown, EnvSource]>();
+    for (const source of sources) {
+      for (const [key, value] of Object.entries(source.envFileConfig)) {
+        if (!definitions.has(key) || source.override) {
+          definitions.set(key, [value, source]);
+        }
+      }
+    }
+    if (this.envFileConfig) {
+      // Files passed to "setEnvFilePaths" replace the ones of "forRoot", and
+      // are expanded with the settings of the last call
+      const last = sources[sources.length - 1];
+      const source: EnvSource = {
+        envFileConfig: this.envFileConfig,
+        expand: true,
+        override: false,
+        expansionEnv: last?.expansionEnv,
+        predefinedEnv: last?.predefinedEnv ?? new Map(),
+      };
+      definitions.clear();
+      for (const [key, value] of Object.entries(this.envFileConfig)) {
+        definitions.set(key, [value, source]);
+      }
+    }
+    return definitions;
   }
 
   private getFromCache<T = any>(
@@ -379,19 +423,21 @@ export class ConfigService<
     return options && options?.infer && Object.keys(options).length === 1;
   }
 
-  private setPredefinedEnv(
-    predefinedEnv: Map<string, string | undefined>,
-    loadedEnv?: Map<string, string | undefined>,
-  ): void {
-    this.predefinedEnv = predefinedEnv;
+  private setLoadedEnv(loadedEnv: Map<string, string | undefined>): void {
     this.loadedEnv = loadedEnv;
   }
 
   private setEnv(key: string, value: string): void {
     process.env[key] = value;
-    if (this.expansionEnv) {
-      this.expansionEnv[key] = value;
-    }
+    // Objects that "expandVariables.processEnv" of a "forRoot" call named
+    const expansionEnvs = new Set(
+      [...this.envSources.values()].map(source => source.expansionEnv),
+    );
+    expansionEnvs.forEach(env => {
+      if (env) {
+        env[key] = value;
+      }
+    });
   }
 
   private expandReferences(
@@ -425,16 +471,16 @@ export class ConfigService<
     propertyPath: string,
     value: string,
   ): Map<string, string> {
-    const env = this.expansionEnv ?? process.env;
     const updates = new Map([[propertyPath, value]]);
-    const lookup = (name: string) =>
-      updates.has(name) ? updates.get(name) : env[name];
-    for (const [k, v] of Object.entries(this.envFileConfig)) {
-      // Value that was in process.env before env file was loaded wins, same
-      // as in dotenv-expand on startup. So does a value passed to "set" (by
-      // this or an earlier call), which is what "get" returns
-      const predefined = this.predefinedEnv.get(k);
+    for (const [k, [v, source]] of this.getEnvFileDefinitions()) {
+      // Variable is expanded again only if the "forRoot" call that loaded it
+      // expanded it, from the same variables. Value that was in process.env
+      // before env file was loaded wins, same as in dotenv-expand on startup.
+      // So does a value passed to "set" (by this or an earlier call), which
+      // is what "get" returns
+      const predefined = source.predefinedEnv.get(k);
       if (
+        !source.expand ||
         typeof v !== 'string' ||
         k === propertyPath ||
         this.explicitlySetKeys.has(k) ||
@@ -448,7 +494,10 @@ export class ConfigService<
       if (!references.some(ref => updates.has(ref))) {
         continue;
       }
-      const updated = this.expandReferences(k, v, lookup);
+      const env = source.expansionEnv ?? process.env;
+      const updated = this.expandReferences(k, v, name =>
+        updates.has(name) ? updates.get(name) : env[name],
+      );
       if (updated === process.env[k]) {
         continue;
       }

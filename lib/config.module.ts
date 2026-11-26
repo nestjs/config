@@ -90,6 +90,8 @@ export class ConfigModule {
   // Variables that "forRoot" (or "ConfigService#set") wrote to process.env,
   // with the value they were given
   private static readonly loadedEnv = new Map<string, string | undefined>();
+  // Number of "forRoot" calls so far, which orders their env files
+  private static forRootCalls = 0;
 
   /**
    * Loads environment variables based on the "ignoreEnvFile" flag and "envFilePath" value.
@@ -99,6 +101,7 @@ export class ConfigModule {
   static async forRoot(
     options: ConfigModuleOptions = {},
   ): Promise<DynamicModule> {
+    const callIndex = this.forRootCalls++;
     const loadingEnv = this.loadEnv(options);
     this.pendingEnvLoads.add(loadingEnv);
     let loadedEnv: LoadedEnv;
@@ -108,7 +111,7 @@ export class ConfigModule {
       this.pendingEnvLoads.delete(loadingEnv);
     }
     this.environmentVariablesLoadedSignal();
-    return this.createDynamicModule(options, loadedEnv);
+    return this.createDynamicModule(options, loadedEnv, callIndex);
   }
 
   /**
@@ -272,6 +275,7 @@ export class ConfigModule {
   private static async createDynamicModule(
     options: ConfigModuleOptions,
     { envFileConfig, predefinedEnv, expandOptions, validatedEnv }: LoadedEnv,
+    callIndex: number,
   ): Promise<DynamicModule> {
     const isConfigToLoad = options.load && options.load.length;
     const configFactory = await Promise.all(options.load || []);
@@ -326,12 +330,16 @@ export class ConfigModule {
 
         // Env file definitions are only used by "set", to update expanded
         // variables. They are the ones loaded (and validated) here, the files
-        // are not read again
-        untypedConfigService.setEnvFileConfig(
-          options.expandVariables ? envFileConfig : {},
-        );
-        untypedConfigService.setExpansionEnv(expandOptions.processEnv);
-        untypedConfigService.setPredefinedEnv(predefinedEnv, this.loadedEnv);
+        // are not read again. Every "forRoot" call of the app adds its own,
+        // with its settings
+        untypedConfigService.addEnvSource(callIndex, {
+          envFileConfig,
+          expand: !!options.expandVariables,
+          override: !!options.override,
+          expansionEnv: expandOptions.processEnv,
+          predefinedEnv,
+        });
+        untypedConfigService.setLoadedEnv(this.loadedEnv);
         configLoaded.resolve();
         return configService;
       },

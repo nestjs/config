@@ -1,3 +1,4 @@
+import { Module } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import * as fs from 'fs';
 import { tmpdir } from 'os';
@@ -148,5 +149,116 @@ describe('Setting variables referenced by expanded env file variables', () => {
     configService.set('API_PORT', '4000');
 
     expect(configService.get('API_URL')).toBe('http://myapp.test:4000');
+  });
+  it.each(['after', 'before'])(
+    'should update expanded variables when another "forRoot" is imported %s the expanding one',
+    async position => {
+      const expandingModule = ConfigModule.forRoot({
+        envFilePath: writeEnvFile(['HOST=localhost', 'URL=http://${HOST}/api']),
+        expandVariables: true,
+      });
+      const otherEnvFilePath = join(tmpDir, 'other.env');
+      fs.writeFileSync(otherEnvFilePath, 'OTHER=1');
+      const otherModule = ConfigModule.forRoot({
+        envFilePath: otherEnvFilePath,
+      });
+      @Module({
+        imports:
+          position === 'after'
+            ? [expandingModule, otherModule]
+            : [otherModule, expandingModule],
+      })
+      class AppModule {}
+      const moduleRef = await Test.createTestingModule({
+        imports: [AppModule],
+      }).compile();
+      const configService = moduleRef.get(ConfigService);
+
+      configService.set('HOST', 'example.com');
+
+      expect(configService.get('URL')).toBe('http://example.com/api');
+      expect(process.env.URL).toBe('http://example.com/api');
+    },
+  );
+
+  describe('when the app calls "forRoot" several times', () => {
+    function writeFile(name: string, lines: string[]) {
+      const envFilePath = join(tmpDir, name);
+      fs.writeFileSync(envFilePath, lines.join('\n'));
+      return envFilePath;
+    }
+
+    async function createAppConfigService(options: ConfigModuleOptions[]) {
+      const imports = options.map(item => ConfigModule.forRoot(item));
+      @Module({ imports })
+      class AppModule {}
+      const moduleRef = await Test.createTestingModule({
+        imports: [AppModule],
+      }).compile();
+      return moduleRef.get(ConfigService);
+    }
+
+    it('should expand a variable again from the call that overrides it', async () => {
+      const configService = await createAppConfigService([
+        {
+          envFilePath: writeFile('first.env', [
+            'HOST=localhost',
+            'URL=http://${HOST}/v1',
+          ]),
+          expandVariables: true,
+        },
+        {
+          envFilePath: writeFile('second.env', ['URL=https://${HOST}/v2']),
+          expandVariables: true,
+          override: true,
+        },
+      ]);
+      expect(process.env.URL).toBe('https://localhost/v2');
+
+      configService.set('HOST', 'example.com');
+
+      expect(process.env.URL).toBe('https://example.com/v2');
+      expect(configService.get('URL')).toBe('https://example.com/v2');
+    });
+
+    it('should not expand a variable that a call without "expandVariables" loaded', async () => {
+      const configService = await createAppConfigService([
+        { envFilePath: writeFile('first.env', ['URL=static']) },
+        {
+          envFilePath: writeFile('second.env', [
+            'HOST=localhost',
+            'URL=http://${HOST}/api',
+          ]),
+          expandVariables: true,
+        },
+      ]);
+      expect(process.env.URL).toBe('static');
+
+      configService.set('HOST', 'example.com');
+
+      expect(process.env.URL).toBe('static');
+      expect(configService.get('URL')).toBe('static');
+    });
+
+    it('should expand a variable again with the "processEnv" of its call', async () => {
+      const processEnv: Record<string, string> = { SCHEME: 'https' };
+      const configService = await createAppConfigService([
+        {
+          envFilePath: writeFile('first.env', [
+            'HOST=localhost',
+            'URL=${SCHEME}://${HOST}/api',
+          ]),
+          expandVariables: { processEnv },
+        },
+        { envFilePath: writeFile('second.env', ['OTHER=1']) },
+      ]);
+      expect(process.env.URL).toBe('https://localhost/api');
+
+      configService.set('HOST', 'example.com');
+
+      expect(process.env.URL).toBe('https://example.com/api');
+      expect(configService.get('URL')).toBe('https://example.com/api');
+      expect(processEnv.URL).toBe('https://example.com/api');
+    });
   });
 });
